@@ -1,0 +1,167 @@
+/* =========================================================================
+   Central theme file.
+   Every color used anywhere in the app is a CSS custom property defined
+   here. Category colors live in src/config/categories.ts but reuse the
+   same hue values as the categorical tokens below, so everything stays
+   traceable to one source of truth.
+   ========================================================================= */
+
+:root {
+  color-scheme: light;
+
+  /* --- surfaces & ink (soft, never pure black/white) --- */
+  --color-bg: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f1efe9;
+  --color-border: #e6e3da;
+
+  --text-primary: #3a3934;
+  --text-secondary: #6c6a63;
+  --text-muted: #96938a;
+
+  /* --- category palette (fixed order, never cycled) --- */
+  --cat-rent: #2a78d6;
+  --cat-groceries: #eb6834;
+  --cat-transport: #1baf7a;
+  --cat-subscriptions: #eda100;
+  --cat-savings: #e87ba4;
+  --cat-fun: #4a3aa7;
+
+  /* --- status palette (reserved, never reused as a category color) --- */
+  --status-good: #0ca30c;
+  --status-warning: #c98500;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+  --status-good-bg: #e6f5e2;
+  --status-warning-bg: #faeed4;
+  --status-serious-bg: #fbe3d8;
+  --status-critical-bg: #fbe1e0;
+
+  /* --- accent used sparingly for primary actions/links --- */
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+
+  --radius-card: 18px;
+  --radius-control: 12px;
+  --shadow-card: 0 1px 2px rgba(58, 57, 52, 0.05), 0 4px 16px rgba(58, 57, 52, 0.05);
+
+  --font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* base sizing scale, adjustable from Settings via --font-scale */
+  --font-scale: 1;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+
+  --transition-fn: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-fast: 160ms;
+  --transition-slow: 320ms;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #1b1b19;
+  --color-surface: #242422;
+  --color-surface-sunken: #1f1f1d;
+  --color-border: #38372f;
+
+  --text-primary: #efece5;
+  --text-secondary: #c3c0b6;
+  --text-muted: #918e84;
+
+  --cat-rent: #5b9ce8;
+  --cat-groceries: #f08a5d;
+  --cat-transport: #3fc994;
+  --cat-subscriptions: #e5ac33;
+  --cat-savings: #ef9dbe;
+  --cat-fun: #9085e9;
+
+  --status-good: #3fbf3f;
+  --status-warning: #e5ac33;
+  --status-serious: #f0a07d;
+  --status-critical: #e57373;
+  --status-good-bg: #223421;
+  --status-warning-bg: #362c1c;
+  --status-serious-bg: #3a2a22;
+  --status-critical-bg: #3a2321;
+
+  --accent: #5b9ce8;
+  --accent-ink: #16181c;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Reduced-motion setting, toggled from Settings by adding this attribute
+   to <html>. Also honors the OS-level reduced-motion preference. */
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: calc(16px * var(--font-scale));
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 var(--space-2) 0;
+  color: var(--text-primary);
+}
+
+p {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--text-secondary);
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Shared "card" surface used across pages to group related info with
+   generous whitespace, per the brief's structure principles. */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-card);
+}
+

@@ -1,0 +1,91 @@
+.budget-pie {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.budget-pie__chart {
+  position: relative;
+  flex: 0 0 260px;
+  width: 260px;
+  height: 260px;
+}
+
+.budget-pie__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.budget-pie__center-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.budget-pie__center-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  max-width: 120px;
+}
+
+.budget-pie__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 220px;
+  min-width: 200px;
+}
+
+.budget-pie__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.95rem;
+}
+
+.budget-pie__legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.budget-pie__legend-label {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.budget-pie__legend-amount {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-pie__tooltip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+}
+
+.budget-pie__tooltip strong {
+  color: var(--text-primary);
+}
+
+.budget-pie__tooltip span {
+  color: var(--text-secondary);
+}

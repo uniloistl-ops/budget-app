@@ -1,0 +1,234 @@
+.paycheck {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.paycheck__section h2 {
+  font-size: 1.05rem;
+}
+
+.paycheck__hint {
+  font-size: 0.85rem;
+  margin-top: -6px;
+}
+
+.paycheck__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--space-2);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.paycheck__field--narrow {
+  max-width: 320px;
+}
+
+.paycheck__field-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.paycheck__field input,
+.paycheck__field select {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+}
+
+.paycheck__field input:focus,
+.paycheck__field select:focus {
+  border-color: var(--accent);
+}
+
+.paycheck__input-euro {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.paycheck__input-euro input {
+  width: 100%;
+}
+
+.paycheck__input-euro span {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.paycheck__tax-class-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.paycheck__tax-class {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--color-surface-sunken);
+  border: 2px solid transparent;
+  border-radius: var(--radius-control);
+  padding: var(--space-2);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: border-color var(--transition-fast) var(--transition-fn), color var(--transition-fast) var(--transition-fn);
+}
+
+.paycheck__tax-class strong {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.paycheck__tax-class span {
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.paycheck__tax-class--active {
+  border-color: var(--accent);
+}
+
+.paycheck__result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.paycheck__headline {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.paycheck__headline strong {
+  color: var(--text-primary);
+}
+
+.paycheck__stackbar {
+  height: 16px;
+  border-radius: 999px;
+  background: var(--status-serious-bg);
+  overflow: hidden;
+}
+
+.paycheck__stackbar-net {
+  height: 100%;
+  background: var(--status-good);
+  border-radius: 999px;
+  transition: width var(--transition-slow) var(--transition-fn);
+}
+
+.paycheck__stackbar-legend {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.paycheck__dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.paycheck__dot--net {
+  background: var(--status-good);
+}
+
+.paycheck__dot--out {
+  background: var(--status-serious);
+}
+
+.paycheck__breakdown-title {
+  font-size: 0.95rem;
+  margin: var(--space-1) 0 0 0;
+}
+
+.paycheck__breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.paycheck__breakdown-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.paycheck__breakdown-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.paycheck__breakdown-note {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.paycheck__notice {
+  background: var(--status-warning-bg);
+  color: var(--text-primary);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.paycheck__breakdown-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+.paycheck__breakdown-bar-fill {
+  height: 100%;
+  background: var(--status-serious);
+  border-radius: 999px;
+  transition: width var(--transition-slow) var(--transition-fn);
+}
+
+.paycheck__breakdown-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.paycheck__totals {
+  display: flex;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.paycheck__totals strong {
+  color: var(--text-primary);
+}
+
+.paycheck__disclaimer {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}

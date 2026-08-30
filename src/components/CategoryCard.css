@@ -1,0 +1,119 @@
+.category-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-card);
+}
+
+.category-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.category-card__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.category-card__label {
+  margin: 0;
+  font-size: 1rem;
+  flex: 1;
+}
+
+.category-card__edit-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.category-card__edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.category-card__edit-row > span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.category-card__edit-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-control);
+  padding: 4px var(--space-2);
+}
+
+.category-card__edit-input span {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.category-card__edit-input input {
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.category-card__edit-input input:focus {
+  outline: none;
+}
+
+.category-card__edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.category-card__save-btn,
+.category-card__cancel-btn {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.category-card__save-btn {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.category-card__cancel-btn {
+  background: var(--color-surface-sunken);
+  color: var(--text-secondary);
+}
+
+.category-card__amounts {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.category-card__amounts strong {
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.category-card__remaining--over {
+  color: var(--status-critical);
+  font-weight: 700;
+}
