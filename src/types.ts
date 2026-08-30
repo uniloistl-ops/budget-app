@@ -1,10 +1,8 @@
-export type CategoryId =
-  | "rent"
-  | "groceries"
-  | "transport"
-  | "subscriptions"
-  | "savings"
-  | "fun";
+/** Categories are user-managed now, so this is just a string id
+ * (e.g. "rent" for the presets, or a generated id for a custom one). */
+export type CategoryId = string;
+
+export type CategoryType = "fixed" | "variable";
 
 export interface Category {
   id: CategoryId;
@@ -14,6 +12,9 @@ export interface Category {
   /** short, warm description used in empty states / tooltips */
   description: string;
   limit: number;
+  /** "fixed" = same amount every month (rent, insurance, subscriptions);
+   * "variable" = changes month to month (groceries, fun money). */
+  type: CategoryType;
 }
 
 /** A category plus how much has actually been spent this month — derived
@@ -38,4 +39,15 @@ export interface Goal {
   targetAmount: number;
   savedAmount: number;
   targetDate?: string;
+}
+
+export interface Debt {
+  id: string;
+  label: string;
+  /** The original amount owed, when the debt started. */
+  totalAmount: number;
+  /** What's still owed right now — you update this as you pay it down. */
+  remainingAmount: number;
+  /** Optional — what you pay toward it each month, just for reference. */
+  monthlyPayment?: number;
 }

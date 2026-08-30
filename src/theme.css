@@ -26,6 +26,9 @@
   --cat-subscriptions: #eda100;
   --cat-savings: #e87ba4;
   --cat-fun: #4a3aa7;
+  /* two more slots, assigned to categories you add yourself */
+  --cat-extra-1: #008300;
+  --cat-extra-2: #e34948;
 
   /* --- status palette (reserved, never reused as a category color) --- */
   --status-good: #0ca30c;
@@ -79,6 +82,8 @@
   --cat-subscriptions: #e5ac33;
   --cat-savings: #ef9dbe;
   --cat-fun: #9085e9;
+  --cat-extra-1: #008300;
+  --cat-extra-2: #e57373;
 
   --status-good: #3fbf3f;
   --status-warning: #e5ac33;

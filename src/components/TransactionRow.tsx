@@ -1,18 +1,30 @@
 import { useState } from "react";
-import type { CategoryId, Transaction } from "../types";
-import { CATEGORY_MAP, CATEGORY_ORDER, getCategoryColor } from "../config/categories";
+import type { Category, Transaction } from "../types";
+import { getCategoryColor } from "../config/categories";
 import "./TransactionRow.css";
+
+const UNKNOWN_CATEGORY: Category = {
+  id: "unknown",
+  label: "Deleted category",
+  colorVar: "--text-muted",
+  description: "",
+  limit: 0,
+  type: "variable",
+};
 
 interface TransactionRowProps {
   transaction: Transaction;
+  /** The full category list — needed to show this transaction's category
+   * (and, in edit mode, to offer every category as an option). */
+  categories: Category[];
   /** When provided, shows an "Edit" control that turns the row into an inline form. */
   onUpdate?: (patch: Partial<Omit<Transaction, "id">>) => void;
   /** When provided, shows a delete control with a lightweight confirm step. */
   onDelete?: () => void;
 }
 
-export function TransactionRow({ transaction, onUpdate, onDelete }: TransactionRowProps) {
-  const category = CATEGORY_MAP[transaction.categoryId];
+export function TransactionRow({ transaction, categories, onUpdate, onDelete }: TransactionRowProps) {
+  const category = categories.find((c) => c.id === transaction.categoryId) ?? UNKNOWN_CATEGORY;
   const date = new Date(transaction.date);
   const dateLabel = date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const [confirming, setConfirming] = useState(false);
@@ -39,8 +51,8 @@ export function TransactionRow({ transaction, onUpdate, onDelete }: TransactionR
     return (
       <div className="transaction-row transaction-row--editing">
         <div className="transaction-row__edit-grid">
-          <select value={draft.categoryId} onChange={(e) => setDraft({ ...draft, categoryId: e.target.value as CategoryId })}>
-            {CATEGORY_ORDER.map((c) => (
+          <select value={draft.categoryId} onChange={(e) => setDraft({ ...draft, categoryId: e.target.value })}>
+            {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
               </option>
@@ -80,7 +92,7 @@ export function TransactionRow({ transaction, onUpdate, onDelete }: TransactionR
     <div className="transaction-row">
       <span
         className="transaction-row__dot"
-        style={{ background: getCategoryColor(transaction.categoryId) }}
+        style={{ background: getCategoryColor(category.colorVar) }}
         aria-hidden="true"
       />
       <div className="transaction-row__main">

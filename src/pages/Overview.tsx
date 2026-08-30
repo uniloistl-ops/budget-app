@@ -9,10 +9,13 @@ import { daysLeftInMonth, formatMonthLabel } from "../lib/dates";
 import "./Overview.css";
 
 export function Overview() {
-  const { categoriesWithSpent, transactionsForSelectedMonth, selectedMonth, isCurrentMonth, incomeForSelectedMonth } =
+  const { categories, categoriesWithSpent, transactionsForSelectedMonth, selectedMonth, isCurrentMonth, incomeForSelectedMonth, debts } =
     useBudgetData();
   const totalSpent = categoriesWithSpent.reduce((sum, c) => sum + c.spent, 0);
   const totalLimit = categoriesWithSpent.reduce((sum, c) => sum + c.limit, 0);
+  const fixedCategories = categoriesWithSpent.filter((c) => c.type === "fixed");
+  const variableCategories = categoriesWithSpent.filter((c) => c.type === "variable");
+  const totalDebt = debts.reduce((sum, d) => sum + d.remainingAmount, 0);
   // Once income has been applied for this month (from the Paycheck tab),
   // "money left" is income minus spending — the number people actually
   // want. Before that, fall back to the category-limits total.
@@ -87,14 +90,27 @@ export function Overview() {
         <BudgetPieChart categories={categoriesWithSpent} centerLabel="spent so far" centerValue={`€${totalSpent.toFixed(0)}`} />
       </section>
 
-      <section>
-        <h2>Categories</h2>
-        <div className="overview__category-grid">
-          {categoriesWithSpent.map((c) => (
-            <CategoryCard key={c.id} category={c} />
-          ))}
-        </div>
-      </section>
+      {fixedCategories.length > 0 && (
+        <section>
+          <h2>Fixed costs</h2>
+          <div className="overview__category-grid">
+            {fixedCategories.map((c) => (
+              <CategoryCard key={c.id} category={c} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {variableCategories.length > 0 && (
+        <section>
+          <h2>Variable costs</h2>
+          <div className="overview__category-grid">
+            {variableCategories.map((c) => (
+              <CategoryCard key={c.id} category={c} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="overview__two-col">
         <section className="card">
@@ -115,7 +131,7 @@ export function Overview() {
           {recentTransactions.length > 0 ? (
             <div>
               {recentTransactions.map((t) => (
-                <TransactionRow key={t.id} transaction={t} />
+                <TransactionRow key={t.id} transaction={t} categories={categories} />
               ))}
             </div>
           ) : (
@@ -126,6 +142,18 @@ export function Overview() {
           </Link>
         </section>
       </div>
+
+      {debts.length > 0 && (
+        <section className="card overview__debt-card">
+          <h2>Debt</h2>
+          <p className="overview__debt-total">
+            You owe <strong>€{totalDebt.toFixed(0)}</strong> across {debts.length} debt{debts.length === 1 ? "" : "s"}.
+          </p>
+          <Link to="/categories" className="overview__see-all">
+            Manage debts
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

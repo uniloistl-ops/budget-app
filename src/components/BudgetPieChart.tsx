@@ -30,12 +30,22 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Tooltip
 
 export function BudgetPieChart({ categories, centerLabel, centerValue }: BudgetPieChartProps) {
   const { resolvedTheme, settings } = useSettings();
-  const data: { id: CategoryId; label: string; spent: number; value: number }[] = categories.map((c) => ({
-    id: c.id,
-    label: c.label,
-    spent: c.spent,
-    value: Math.max(c.spent, 0.01), // keep zero-spend slices from disappearing entirely
-  }));
+  const data: { id: CategoryId; label: string; spent: number; value: number; colorVar: string }[] = categories.map(
+    (c) => ({
+      id: c.id,
+      label: c.label,
+      spent: c.spent,
+      colorVar: c.colorVar,
+      value: Math.max(c.spent, 0.01), // keep zero-spend slices from disappearing entirely
+    })
+  );
+
+  // With more categories (especially once one dominates, like Rent), fixed
+  // padding/rounding makes the thin remaining slices look like disconnected
+  // blobs rather than a ring — so both scale down as the slice count grows.
+  const sliceCount = data.length;
+  const paddingAngle = sliceCount > 6 ? 1.2 : sliceCount > 4 ? 2 : 3;
+  const cornerRadius = sliceCount > 6 ? 2 : sliceCount > 4 ? 4 : 6;
 
   return (
     <div className="budget-pie">
@@ -48,14 +58,14 @@ export function BudgetPieChart({ categories, centerLabel, centerValue }: BudgetP
               nameKey="label"
               innerRadius={78}
               outerRadius={110}
-              paddingAngle={3}
-              cornerRadius={6}
+              paddingAngle={paddingAngle}
+              cornerRadius={cornerRadius}
               stroke="none"
               isAnimationActive={settings.animations}
               animationDuration={500}
             >
               {data.map((entry) => (
-                <Cell key={entry.id} fill={getCategoryHex(entry.id, resolvedTheme)} />
+                <Cell key={entry.id} fill={getCategoryHex(entry.colorVar, resolvedTheme)} />
               ))}
             </Pie>
             <Tooltip content={<ChartTooltip />} />
@@ -73,7 +83,7 @@ export function BudgetPieChart({ categories, centerLabel, centerValue }: BudgetP
           <li key={c.id} className="budget-pie__legend-item">
             <span
               className="budget-pie__legend-dot"
-              style={{ background: getCategoryHex(c.id, resolvedTheme) }}
+              style={{ background: getCategoryHex(c.colorVar, resolvedTheme) }}
               aria-hidden="true"
             />
             <span className="budget-pie__legend-label">{c.label}</span>

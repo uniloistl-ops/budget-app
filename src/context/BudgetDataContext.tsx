@@ -1,19 +1,19 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { CATEGORY_ORDER } from "../config/categories";
+import { nextColorVar } from "../config/categories";
 import { usePersistentState } from "../lib/usePersistentState";
 import { currentMonthKey, shiftMonthKey } from "../lib/dates";
-import type { Category, CategoryId, CategoryWithSpent, Goal, Transaction } from "../types";
+import type { Category, CategoryId, CategoryType, CategoryWithSpent, Debt, Goal, Transaction } from "../types";
 
-const DEFAULT_LIMITS: Record<CategoryId, number> = {
-  rent: 900,
-  groceries: 350,
-  transport: 90,
-  subscriptions: 60,
-  savings: 300,
-  fun: 150,
-};
-
-const DEFAULT_CATEGORIES: Category[] = CATEGORY_ORDER.map((c) => ({ ...c, limit: DEFAULT_LIMITS[c.id] }));
+// A starter set so the app isn't empty on first run — rename, delete, or
+// add to these freely from the Categories page.
+const DEFAULT_CATEGORIES: Category[] = [
+  { id: "rent", label: "Rent", colorVar: "--cat-rent", description: "Where you live", limit: 900, type: "fixed" },
+  { id: "groceries", label: "Groceries", colorVar: "--cat-groceries", description: "Food & household", limit: 350, type: "variable" },
+  { id: "transport", label: "Transport", colorVar: "--cat-transport", description: "Getting around", limit: 90, type: "variable" },
+  { id: "subscriptions", label: "Subscriptions", colorVar: "--cat-subscriptions", description: "Regular services", limit: 60, type: "fixed" },
+  { id: "savings", label: "Savings", colorVar: "--cat-savings", description: "Future you", limit: 300, type: "fixed" },
+  { id: "fun", label: "Fun money", colorVar: "--cat-fun", description: "No guilt spending", limit: 150, type: "variable" },
+];
 
 // Seeded with a few example transactions so the app isn't empty on first
 // run — delete them and add your own whenever you like.
@@ -32,10 +32,13 @@ const DEFAULT_GOALS: Goal[] = [
   { id: "g2", label: "Trip to Portugal", targetAmount: 800, savedAmount: 300 },
 ];
 
+const DEFAULT_DEBTS: Debt[] = [{ id: "d1", label: "Car loan", totalAmount: 8000, remainingAmount: 5200, monthlyPayment: 180 }];
+
 interface BudgetData {
   categories: Category[];
   transactions: Transaction[];
   goals: Goal[];
+  debts: Debt[];
   /** Month key ("2026-08") -> monthly income, set manually or "Apply"'d from Paycheck. */
   incomeByMonth: Record<string, number>;
 }
@@ -52,6 +55,7 @@ interface BudgetDataContextValue {
   /** Just the transactions that fall in the selected month. */
   transactionsForSelectedMonth: Transaction[];
   goals: Goal[];
+  debts: Debt[];
 
   selectedMonth: string;
   isCurrentMonth: boolean;
@@ -62,13 +66,18 @@ interface BudgetDataContextValue {
   incomeForSelectedMonth: number | undefined;
   setIncomeForSelectedMonth: (amount: number) => void;
 
+  addCategory: (input: { label: string; type: CategoryType; limit: number }) => void;
   updateCategoryLimit: (id: CategoryId, limit: number) => void;
+  deleteCategory: (id: CategoryId) => void;
   addTransaction: (input: Omit<Transaction, "id">) => void;
   updateTransaction: (id: string, patch: Partial<Omit<Transaction, "id">>) => void;
   deleteTransaction: (id: string) => void;
   updateGoal: (id: string, patch: Partial<Pick<Goal, "label" | "targetAmount" | "savedAmount">>) => void;
   addGoal: (input: Omit<Goal, "id">) => void;
   deleteGoal: (id: string) => void;
+  updateDebt: (id: string, patch: Partial<Pick<Debt, "label" | "totalAmount" | "remainingAmount" | "monthlyPayment">>) => void;
+  addDebt: (input: Omit<Debt, "id">) => void;
+  deleteDebt: (id: string) => void;
 }
 
 const BudgetDataContext = createContext<BudgetDataContextValue | null>(null);
@@ -78,6 +87,7 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
     categories: DEFAULT_CATEGORIES,
     transactions: DEFAULT_TRANSACTIONS,
     goals: DEFAULT_GOALS,
+    debts: DEFAULT_DEBTS,
     incomeByMonth: {},
   });
 
@@ -104,6 +114,7 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
     transactions: data.transactions,
     transactionsForSelectedMonth,
     goals: data.goals,
+    debts: data.debts,
 
     selectedMonth,
     isCurrentMonth: selectedMonth === currentMonthKey(),
@@ -116,11 +127,27 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
       setData({ ...data, incomeByMonth: { ...data.incomeByMonth, [selectedMonth]: amount } });
     },
 
+    addCategory({ label, type, limit }) {
+      const category: Category = {
+        id: makeId(),
+        label,
+        type,
+        limit: Math.max(0, limit),
+        colorVar: nextColorVar(data.categories.length),
+        description: "",
+      };
+      setData({ ...data, categories: [...data.categories, category] });
+    },
+
     updateCategoryLimit(id, limit) {
       setData({
         ...data,
         categories: data.categories.map((c) => (c.id === id ? { ...c, limit: Math.max(0, limit) } : c)),
       });
+    },
+
+    deleteCategory(id) {
+      setData({ ...data, categories: data.categories.filter((c) => c.id !== id) });
     },
 
     addTransaction(input) {
@@ -145,6 +172,18 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
 
     deleteGoal(id) {
       setData({ ...data, goals: data.goals.filter((g) => g.id !== id) });
+    },
+
+    updateDebt(id, patch) {
+      setData({ ...data, debts: data.debts.map((d) => (d.id === id ? { ...d, ...patch } : d)) });
+    },
+
+    addDebt(input) {
+      setData({ ...data, debts: [...data.debts, { ...input, id: makeId() }] });
+    },
+
+    deleteDebt(id) {
+      setData({ ...data, debts: data.debts.filter((d) => d.id !== id) });
     },
   };
 

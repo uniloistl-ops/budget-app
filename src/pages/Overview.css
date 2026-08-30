@@ -125,6 +125,23 @@
   text-decoration: underline;
 }
 
+.overview__debt-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.overview__debt-total {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.overview__debt-total strong {
+  color: var(--status-critical);
+}
+
 @media (max-width: 780px) {
   .overview__two-col {
     grid-template-columns: 1fr;

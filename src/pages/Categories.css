@@ -1,7 +1,7 @@
 .categories-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .categories-page__header {
@@ -10,6 +10,40 @@
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
+}
+
+.categories-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.categories-page__section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.categories-page__section-header h2 {
+  margin-bottom: 2px;
+}
+
+.categories-page__hint {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.categories-page__add-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
 }
 
 .categories-page__grid {
@@ -21,4 +55,216 @@
 .categories-page__note {
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+.categories-page__empty {
+  color: var(--text-muted);
+}
+
+.categories-page__add-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.categories-page__add-form h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.categories-page__add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
+.categories-page__add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.categories-page__add-field input {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+}
+
+.categories-page__add-field input:focus {
+  border-color: var(--accent);
+}
+
+.categories-page__add-euro {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: 0 var(--space-3);
+}
+
+.categories-page__add-euro:focus-within {
+  border-color: var(--accent);
+}
+
+.categories-page__add-euro span {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.categories-page__add-euro input {
+  border: none;
+  background: none;
+  padding: var(--space-2) 0;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.categories-page__add-euro input:focus {
+  outline: none;
+}
+
+.categories-page__add-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.categories-page__add-submit,
+.categories-page__add-cancel {
+  border: none;
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.categories-page__add-submit {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.categories-page__add-cancel {
+  background: var(--color-surface-sunken);
+  color: var(--text-secondary);
+}
+
+/* --- Debt cards --- */
+
+.debt-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.debt-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.debt-card__header h3 {
+  margin: 0;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 8ch;
+}
+
+.debt-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.debt-card__amounts {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.debt-card__edit-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.debt-card__delete-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.debt-card__delete-btn:hover {
+  background: var(--status-critical-bg);
+  color: var(--status-critical);
+}
+
+.debt-card__confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.debt-card__confirm-yes,
+.debt-card__confirm-no {
+  border: none;
+  border-radius: var(--radius-control);
+  padding: 4px var(--space-2);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.debt-card__confirm-yes {
+  background: var(--status-critical);
+  color: #fff;
+}
+
+.debt-card__confirm-no {
+  background: var(--color-surface-sunken);
+  color: var(--text-secondary);
+}
+
+.debt-card__edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.debt-card__edit-row > span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.debt-card__monthly {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }

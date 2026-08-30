@@ -111,7 +111,7 @@ function GoalCard({ goal }: { goal: Goal }) {
           </div>
         </div>
       ) : (
-        <ProgressBar spent={goal.savedAmount} limit={goal.targetAmount} label={goal.label} />
+        <ProgressBar spent={goal.savedAmount} limit={goal.targetAmount} label={goal.label} direction="toward-target" />
       )}
     </div>
   );

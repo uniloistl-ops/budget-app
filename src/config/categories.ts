@@ -1,66 +1,69 @@
-import type { BudgetStatus, CategoryId } from "../types";
+import type { BudgetStatus } from "../types";
 
 /**
- * Single source of truth for category metadata.
- * Every place in the app that needs a category's color reads it from here
- * (via `getCategoryColor`) rather than hard-coding a hex value, so the
- * mapping stays consistent everywhere and stays trivial to make
- * user-editable later.
+ * Categories are user-managed (added/renamed/removed from the Categories
+ * page), so there's no fixed list here anymore — the default starter set
+ * lives in BudgetDataContext instead. What stays here: color assignment
+ * for newly-added categories, and the status-color helpers shared by
+ * anything with a spent/limit ratio (categories, goals, debts).
  */
-export interface CategoryMeta {
-  id: CategoryId;
-  label: string;
-  colorVar: string;
-  description: string;
-}
-
-export const CATEGORY_ORDER: CategoryMeta[] = [
-  { id: "rent", label: "Rent", colorVar: "--cat-rent", description: "Where you live" },
-  { id: "groceries", label: "Groceries", colorVar: "--cat-groceries", description: "Food & household" },
-  { id: "transport", label: "Transport", colorVar: "--cat-transport", description: "Getting around" },
-  { id: "subscriptions", label: "Subscriptions", colorVar: "--cat-subscriptions", description: "Regular services" },
-  { id: "savings", label: "Savings", colorVar: "--cat-savings", description: "Future you" },
-  { id: "fun", label: "Fun money", colorVar: "--cat-fun", description: "No guilt spending" },
-];
-
-export const CATEGORY_MAP: Record<CategoryId, CategoryMeta> = Object.fromEntries(
-  CATEGORY_ORDER.map((c) => [c.id, c])
-) as Record<CategoryId, CategoryMeta>;
 
 /** Resolve a category's color as a CSS var() reference, ready to use inline. */
-export function getCategoryColor(id: CategoryId): string {
-  return `var(${CATEGORY_MAP[id].colorVar})`;
+export function getCategoryColor(colorVar: string): string {
+  return `var(${colorVar})`;
 }
 
 /**
  * Literal hex values, mirroring the custom properties in theme.css exactly.
  * CSS-rendered elements should always prefer `getCategoryColor` (a var()
  * reference, so it repaints instantly on theme toggle); this map exists
- * only for the handful of places (SVG chart libraries) that need a
- * concrete color string rather than a CSS variable. Keep this in sync
- * with the `--cat-*` values in src/theme.css.
+ * only for the handful of places (SVG/canvas chart drawing) that need a
+ * concrete color string. Keep this in sync with the `--cat-*` values in
+ * src/theme.css.
  */
-export const CATEGORY_COLOR_HEX: Record<"light" | "dark", Record<CategoryId, string>> = {
+const COLOR_VAR_HEX: Record<"light" | "dark", Record<string, string>> = {
   light: {
-    rent: "#2a78d6",
-    groceries: "#eb6834",
-    transport: "#1baf7a",
-    subscriptions: "#eda100",
-    savings: "#e87ba4",
-    fun: "#4a3aa7",
+    "--cat-rent": "#2a78d6",
+    "--cat-groceries": "#eb6834",
+    "--cat-transport": "#1baf7a",
+    "--cat-subscriptions": "#eda100",
+    "--cat-savings": "#e87ba4",
+    "--cat-fun": "#4a3aa7",
+    "--cat-extra-1": "#008300",
+    "--cat-extra-2": "#e34948",
   },
   dark: {
-    rent: "#5b9ce8",
-    groceries: "#f08a5d",
-    transport: "#3fc994",
-    subscriptions: "#e5ac33",
-    savings: "#ef9dbe",
-    fun: "#9085e9",
+    "--cat-rent": "#5b9ce8",
+    "--cat-groceries": "#f08a5d",
+    "--cat-transport": "#3fc994",
+    "--cat-subscriptions": "#e5ac33",
+    "--cat-savings": "#ef9dbe",
+    "--cat-fun": "#9085e9",
+    "--cat-extra-1": "#008300",
+    "--cat-extra-2": "#e57373",
   },
 };
 
-export function getCategoryHex(id: CategoryId, mode: "light" | "dark"): string {
-  return CATEGORY_COLOR_HEX[mode][id];
+export function getCategoryHex(colorVar: string, mode: "light" | "dark"): string {
+  return COLOR_VAR_HEX[mode][colorVar] ?? (mode === "light" ? "#96938a" : "#918e84");
+}
+
+/** The full color-assignment pool, in order. The starter categories claim
+ * the first six; a category you add yourself gets the next free slot,
+ * cycling back around if you've added more than eight. */
+export const COLOR_VAR_POOL = [
+  "--cat-rent",
+  "--cat-groceries",
+  "--cat-transport",
+  "--cat-subscriptions",
+  "--cat-savings",
+  "--cat-fun",
+  "--cat-extra-1",
+  "--cat-extra-2",
+];
+
+export function nextColorVar(existingCategoryCount: number): string {
+  return COLOR_VAR_POOL[existingCategoryCount % COLOR_VAR_POOL.length];
 }
 
 /**

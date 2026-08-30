@@ -1,19 +1,27 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { MonthNav } from "../components/MonthNav";
 import { TransactionRow } from "../components/TransactionRow";
-import { CATEGORY_ORDER, getCategoryColor } from "../config/categories";
+import { getCategoryColor } from "../config/categories";
 import { useBudgetData } from "../context/BudgetDataContext";
 import { firstDayOfMonth, formatMonthLabel } from "../lib/dates";
-import type { CategoryId } from "../types";
+import type { Category, CategoryId } from "../types";
 import "./Transactions.css";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function AddTransactionForm({ defaultDate, onClose }: { defaultDate: string; onClose: () => void }) {
+function AddTransactionForm({
+  categories,
+  defaultDate,
+  onClose,
+}: {
+  categories: Category[];
+  defaultDate: string;
+  onClose: () => void;
+}) {
   const { addTransaction } = useBudgetData();
-  const [categoryId, setCategoryId] = useState<CategoryId>(CATEGORY_ORDER[0].id);
+  const [categoryId, setCategoryId] = useState<CategoryId>(categories[0]?.id ?? "");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(defaultDate);
@@ -21,7 +29,7 @@ function AddTransactionForm({ defaultDate, onClose }: { defaultDate: string; onC
   function submit(e: FormEvent) {
     e.preventDefault();
     const value = Number(amount);
-    if (!description.trim() || !Number.isFinite(value) || value <= 0) return;
+    if (!description.trim() || !Number.isFinite(value) || value <= 0 || !categoryId) return;
     addTransaction({ categoryId, description: description.trim(), amount: value, date });
     onClose();
   }
@@ -32,8 +40,8 @@ function AddTransactionForm({ defaultDate, onClose }: { defaultDate: string; onC
       <div className="transactions__add-grid">
         <label className="transactions__add-field">
           <span>Category</span>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value as CategoryId)}>
-            {CATEGORY_ORDER.map((c) => (
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
               </option>
@@ -75,16 +83,16 @@ function AddTransactionForm({ defaultDate, onClose }: { defaultDate: string; onC
 }
 
 export function Transactions() {
-  const { transactionsForSelectedMonth, updateTransaction, deleteTransaction, selectedMonth, isCurrentMonth } =
+  const { categories, transactionsForSelectedMonth, updateTransaction, deleteTransaction, selectedMonth, isCurrentMonth } =
     useBudgetData();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [activeCategories, setActiveCategories] = useState<Set<CategoryId>>(
-    () => new Set(CATEGORY_ORDER.map((c) => c.id))
-  );
+  // Categories you've hidden from view — an opt-out set (rather than an
+  // opt-in one) so a category you add later shows up by default.
+  const [hiddenCategories, setHiddenCategories] = useState<Set<CategoryId>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<CategoryId>>(new Set());
 
   function toggleCategory(id: CategoryId) {
-    setActiveCategories((prev) => {
+    setHiddenCategories((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -102,13 +110,15 @@ export function Transactions() {
   }
 
   const grouped = useMemo(() => {
-    return CATEGORY_ORDER.filter((c) => activeCategories.has(c.id)).map((cat) => ({
-      category: cat,
-      transactions: transactionsForSelectedMonth
-        .filter((t) => t.categoryId === cat.id)
-        .sort((a, b) => (a.date < b.date ? 1 : -1)),
-    }));
-  }, [activeCategories, transactionsForSelectedMonth]);
+    return categories
+      .filter((c) => !hiddenCategories.has(c.id))
+      .map((cat) => ({
+        category: cat,
+        transactions: transactionsForSelectedMonth
+          .filter((t) => t.categoryId === cat.id)
+          .sort((a, b) => (a.date < b.date ? 1 : -1)),
+      }));
+  }, [categories, hiddenCategories, transactionsForSelectedMonth]);
 
   return (
     <div className="transactions">
@@ -127,26 +137,27 @@ export function Transactions() {
 
       {showAddForm && (
         <AddTransactionForm
+          categories={categories}
           defaultDate={isCurrentMonth ? todayIso() : firstDayOfMonth(selectedMonth)}
           onClose={() => setShowAddForm(false)}
         />
       )}
 
       <div className="transactions__filters" role="group" aria-label="Filter by category">
-        {CATEGORY_ORDER.map((cat) => {
-          const active = activeCategories.has(cat.id);
+        {categories.map((cat) => {
+          const active = !hiddenCategories.has(cat.id);
           return (
             <button
               key={cat.id}
               type="button"
               className={"transactions__filter-chip" + (active ? " transactions__filter-chip--active" : "")}
-              style={active ? { borderColor: getCategoryColor(cat.id) } : undefined}
+              style={active ? { borderColor: getCategoryColor(cat.colorVar) } : undefined}
               onClick={() => toggleCategory(cat.id)}
               aria-pressed={active}
             >
               <span
                 className="transactions__filter-dot"
-                style={{ background: getCategoryColor(cat.id) }}
+                style={{ background: getCategoryColor(cat.colorVar) }}
                 aria-hidden="true"
               />
               {cat.label}
@@ -166,7 +177,7 @@ export function Transactions() {
             >
               <span
                 className="transactions__group-dot"
-                style={{ background: getCategoryColor(category.id) }}
+                style={{ background: getCategoryColor(category.colorVar) }}
                 aria-hidden="true"
               />
               <h2>{category.label}</h2>
@@ -183,6 +194,7 @@ export function Transactions() {
                     <TransactionRow
                       key={t.id}
                       transaction={t}
+                      categories={categories}
                       onUpdate={(patch) => updateTransaction(t.id, patch)}
                       onDelete={() => deleteTransaction(t.id)}
                     />
