@@ -98,3 +98,95 @@
   background: var(--color-surface-sunken);
   color: var(--text-secondary);
 }
+
+.transaction-row__edit-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.transaction-row--editing {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-2) 0 var(--space-3) 0;
+}
+
+.transaction-row__edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-2);
+}
+
+.transaction-row__edit-grid input,
+.transaction-row__edit-grid select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+  width: 100%;
+}
+
+.transaction-row__edit-grid input:focus,
+.transaction-row__edit-grid select:focus {
+  border-color: var(--accent);
+}
+
+.transaction-row__edit-euro {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: 0 var(--space-2);
+}
+
+.transaction-row__edit-euro:focus-within {
+  border-color: var(--accent);
+}
+
+.transaction-row__edit-euro span {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.transaction-row__edit-euro input {
+  border: none;
+  background: none;
+  padding: var(--space-1) 0;
+}
+
+.transaction-row__edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.transaction-row__save,
+.transaction-row__cancel {
+  border: none;
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-3);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.transaction-row__save {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.transaction-row__cancel {
+  background: var(--color-surface-sunken);
+  color: var(--text-secondary);
+}

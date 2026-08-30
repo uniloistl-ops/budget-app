@@ -75,7 +75,8 @@ function AddTransactionForm({ defaultDate, onClose }: { defaultDate: string; onC
 }
 
 export function Transactions() {
-  const { transactionsForSelectedMonth, deleteTransaction, selectedMonth, isCurrentMonth } = useBudgetData();
+  const { transactionsForSelectedMonth, updateTransaction, deleteTransaction, selectedMonth, isCurrentMonth } =
+    useBudgetData();
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeCategories, setActiveCategories] = useState<Set<CategoryId>>(
     () => new Set(CATEGORY_ORDER.map((c) => c.id))
@@ -179,7 +180,12 @@ export function Transactions() {
               (categoryTransactions.length > 0 ? (
                 <div>
                   {categoryTransactions.map((t) => (
-                    <TransactionRow key={t.id} transaction={t} onDelete={() => deleteTransaction(t.id)} />
+                    <TransactionRow
+                      key={t.id}
+                      transaction={t}
+                      onUpdate={(patch) => updateTransaction(t.id, patch)}
+                      onDelete={() => deleteTransaction(t.id)}
+                    />
                   ))}
                 </div>
               ) : (

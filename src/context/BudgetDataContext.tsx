@@ -64,6 +64,7 @@ interface BudgetDataContextValue {
 
   updateCategoryLimit: (id: CategoryId, limit: number) => void;
   addTransaction: (input: Omit<Transaction, "id">) => void;
+  updateTransaction: (id: string, patch: Partial<Omit<Transaction, "id">>) => void;
   deleteTransaction: (id: string) => void;
   updateGoal: (id: string, patch: Partial<Pick<Goal, "label" | "targetAmount" | "savedAmount">>) => void;
   addGoal: (input: Omit<Goal, "id">) => void;
@@ -124,6 +125,10 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
 
     addTransaction(input) {
       setData({ ...data, transactions: [{ ...input, id: makeId() }, ...data.transactions] });
+    },
+
+    updateTransaction(id, patch) {
+      setData({ ...data, transactions: data.transactions.map((t) => (t.id === id ? { ...t, ...patch } : t)) });
     },
 
     deleteTransaction(id) {
