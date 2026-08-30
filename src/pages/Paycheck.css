@@ -4,8 +4,41 @@
   gap: var(--space-3);
 }
 
+.paycheck__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
 .paycheck__section h2 {
   font-size: 1.05rem;
+}
+
+.paycheck__apply-row {
+  display: flex;
+}
+
+.paycheck__apply-btn {
+  background: var(--status-good);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.paycheck__apply-btn:hover {
+  opacity: 0.9;
+}
+
+.paycheck__applied {
+  color: var(--status-good);
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .paycheck__hint {

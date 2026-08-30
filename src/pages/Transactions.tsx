@@ -1,7 +1,9 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { MonthNav } from "../components/MonthNav";
 import { TransactionRow } from "../components/TransactionRow";
 import { CATEGORY_ORDER, getCategoryColor } from "../config/categories";
 import { useBudgetData } from "../context/BudgetDataContext";
+import { firstDayOfMonth, formatMonthLabel } from "../lib/dates";
 import type { CategoryId } from "../types";
 import "./Transactions.css";
 
@@ -9,12 +11,12 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function AddTransactionForm({ onClose }: { onClose: () => void }) {
+function AddTransactionForm({ defaultDate, onClose }: { defaultDate: string; onClose: () => void }) {
   const { addTransaction } = useBudgetData();
   const [categoryId, setCategoryId] = useState<CategoryId>(CATEGORY_ORDER[0].id);
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(todayIso());
+  const [date, setDate] = useState(defaultDate);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -73,7 +75,7 @@ function AddTransactionForm({ onClose }: { onClose: () => void }) {
 }
 
 export function Transactions() {
-  const { transactions, deleteTransaction } = useBudgetData();
+  const { transactionsForSelectedMonth, deleteTransaction, selectedMonth, isCurrentMonth } = useBudgetData();
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeCategories, setActiveCategories] = useState<Set<CategoryId>>(
     () => new Set(CATEGORY_ORDER.map((c) => c.id))
@@ -101,11 +103,11 @@ export function Transactions() {
   const grouped = useMemo(() => {
     return CATEGORY_ORDER.filter((c) => activeCategories.has(c.id)).map((cat) => ({
       category: cat,
-      transactions: transactions
+      transactions: transactionsForSelectedMonth
         .filter((t) => t.categoryId === cat.id)
         .sort((a, b) => (a.date < b.date ? 1 : -1)),
     }));
-  }, [activeCategories, transactions]);
+  }, [activeCategories, transactionsForSelectedMonth]);
 
   return (
     <div className="transactions">
@@ -114,6 +116,7 @@ export function Transactions() {
           <h1>Transactions</h1>
           <p>Grouped by category so you can focus on one at a time.</p>
         </div>
+        <MonthNav />
         {!showAddForm && (
           <button type="button" className="overview__cta" onClick={() => setShowAddForm(true)}>
             + Log a transaction
@@ -121,7 +124,12 @@ export function Transactions() {
         )}
       </header>
 
-      {showAddForm && <AddTransactionForm onClose={() => setShowAddForm(false)} />}
+      {showAddForm && (
+        <AddTransactionForm
+          defaultDate={isCurrentMonth ? todayIso() : firstDayOfMonth(selectedMonth)}
+          onClose={() => setShowAddForm(false)}
+        />
+      )}
 
       <div className="transactions__filters" role="group" aria-label="Filter by category">
         {CATEGORY_ORDER.map((cat) => {
@@ -175,7 +183,7 @@ export function Transactions() {
                   ))}
                 </div>
               ) : (
-                <p className="transactions__empty">No transactions in this category yet.</p>
+                <p className="transactions__empty">No transactions in {formatMonthLabel(selectedMonth)} yet.</p>
               ))}
           </section>
         ))}

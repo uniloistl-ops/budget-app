@@ -8,6 +8,9 @@ import {
   type TaxClass,
 } from "../lib/germanTax";
 import { usePersistentState } from "../lib/usePersistentState";
+import { MonthNav } from "../components/MonthNav";
+import { useBudgetData } from "../context/BudgetDataContext";
+import { formatMonthLabel } from "../lib/dates";
 import "./Paycheck.css";
 
 const DEFAULT_INPUTS: PaycheckInputs = {
@@ -49,6 +52,8 @@ function euro(n: number): string {
 
 export function Paycheck() {
   const [inputs, setInputs] = usePersistentState<PaycheckInputs>("calm-budget:paycheck", DEFAULT_INPUTS);
+  const { selectedMonth, incomeForSelectedMonth, setIncomeForSelectedMonth } = useBudgetData();
+  const monthLabel = formatMonthLabel(selectedMonth);
 
   function set<K extends keyof PaycheckInputs>(key: K, value: PaycheckInputs[K]) {
     setInputs({ ...inputs, [key]: value });
@@ -57,6 +62,8 @@ export function Paycheck() {
   const result = computePaycheck(inputs);
   const grossForBar = Math.max(result.grossMonthly, 0.01);
   const netPct = Math.max(0, Math.min(100, (result.netMonthly / grossForBar) * 100));
+  const alreadyApplied =
+    incomeForSelectedMonth !== undefined && Math.abs(incomeForSelectedMonth - result.netMonthly) < 0.01;
 
   const isMinijob = inputs.employmentType === "minijob";
   const isStudent = inputs.employmentType === "student";
@@ -69,9 +76,12 @@ export function Paycheck() {
 
   return (
     <div className="paycheck">
-      <header>
-        <h1>Paycheck</h1>
-        <p>Estimate next month's take-home pay from your German gross wage.</p>
+      <header className="paycheck__header">
+        <div>
+          <h1>Paycheck</h1>
+          <p>Estimate take-home pay from your German gross wage — step back to check a past month, or ahead to plan.</p>
+        </div>
+        <MonthNav />
       </header>
 
       <section className="card paycheck__section">
@@ -316,7 +326,7 @@ export function Paycheck() {
 
       <section className="card paycheck__result">
         <p className="paycheck__headline">
-          Next month, you can expect about <strong>€{euro(result.netMonthly)}</strong> net
+          In {monthLabel}, you can expect about <strong>€{euro(result.netMonthly)}</strong> net
           {result.netPerHour !== null && (
             <>
               {" "}
@@ -325,6 +335,20 @@ export function Paycheck() {
           )}
           .
         </p>
+
+        <div className="paycheck__apply-row">
+          {alreadyApplied ? (
+            <span className="paycheck__applied">✓ Applied as {monthLabel}'s income on the Overview</span>
+          ) : (
+            <button
+              type="button"
+              className="paycheck__apply-btn"
+              onClick={() => setIncomeForSelectedMonth(result.netMonthly)}
+            >
+              Apply as {monthLabel} income
+            </button>
+          )}
+        </div>
 
         <div className="paycheck__stackbar" aria-hidden="true">
           <div className="paycheck__stackbar-net" style={{ width: `${netPct}%` }} />

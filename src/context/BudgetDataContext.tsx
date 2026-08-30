@@ -1,6 +1,7 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { CATEGORY_ORDER } from "../config/categories";
 import { usePersistentState } from "../lib/usePersistentState";
+import { currentMonthKey, shiftMonthKey } from "../lib/dates";
 import type { Category, CategoryId, CategoryWithSpent, Goal, Transaction } from "../types";
 
 const DEFAULT_LIMITS: Record<CategoryId, number> = {
@@ -35,11 +36,8 @@ interface BudgetData {
   categories: Category[];
   transactions: Transaction[];
   goals: Goal[];
-}
-
-function currentMonthKey(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  /** Month key ("2026-08") -> monthly income, set manually or "Apply"'d from Paycheck. */
+  incomeByMonth: Record<string, number>;
 }
 
 function makeId(): string {
@@ -48,9 +46,22 @@ function makeId(): string {
 
 interface BudgetDataContextValue {
   categories: Category[];
+  /** This month's categories with `spent` derived from that month's transactions. */
   categoriesWithSpent: CategoryWithSpent[];
   transactions: Transaction[];
+  /** Just the transactions that fall in the selected month. */
+  transactionsForSelectedMonth: Transaction[];
   goals: Goal[];
+
+  selectedMonth: string;
+  isCurrentMonth: boolean;
+  goToPreviousMonth: () => void;
+  goToNextMonth: () => void;
+  goToCurrentMonth: () => void;
+
+  incomeForSelectedMonth: number | undefined;
+  setIncomeForSelectedMonth: (amount: number) => void;
+
   updateCategoryLimit: (id: CategoryId, limit: number) => void;
   addTransaction: (input: Omit<Transaction, "id">) => void;
   deleteTransaction: (id: string) => void;
@@ -66,23 +77,43 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
     categories: DEFAULT_CATEGORIES,
     transactions: DEFAULT_TRANSACTIONS,
     goals: DEFAULT_GOALS,
+    incomeByMonth: {},
   });
 
+  // Which month is being viewed — always opens on the real current month,
+  // like a calendar app, rather than remembering where you last left off.
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey());
+
+  const transactionsForSelectedMonth = useMemo(
+    () => data.transactions.filter((t) => t.date.startsWith(selectedMonth)),
+    [data.transactions, selectedMonth]
+  );
+
   const categoriesWithSpent = useMemo<CategoryWithSpent[]>(() => {
-    const monthKey = currentMonthKey();
     const spentByCategory = new Map<CategoryId, number>();
-    for (const t of data.transactions) {
-      if (!t.date.startsWith(monthKey)) continue;
+    for (const t of transactionsForSelectedMonth) {
       spentByCategory.set(t.categoryId, (spentByCategory.get(t.categoryId) ?? 0) + t.amount);
     }
     return data.categories.map((c) => ({ ...c, spent: spentByCategory.get(c.id) ?? 0 }));
-  }, [data.categories, data.transactions]);
+  }, [data.categories, transactionsForSelectedMonth]);
 
   const value: BudgetDataContextValue = {
     categories: data.categories,
     categoriesWithSpent,
     transactions: data.transactions,
+    transactionsForSelectedMonth,
     goals: data.goals,
+
+    selectedMonth,
+    isCurrentMonth: selectedMonth === currentMonthKey(),
+    goToPreviousMonth: () => setSelectedMonth((m) => shiftMonthKey(m, -1)),
+    goToNextMonth: () => setSelectedMonth((m) => shiftMonthKey(m, 1)),
+    goToCurrentMonth: () => setSelectedMonth(currentMonthKey()),
+
+    incomeForSelectedMonth: data.incomeByMonth[selectedMonth],
+    setIncomeForSelectedMonth(amount) {
+      setData({ ...data, incomeByMonth: { ...data.incomeByMonth, [selectedMonth]: amount } });
+    },
 
     updateCategoryLimit(id, limit) {
       setData({

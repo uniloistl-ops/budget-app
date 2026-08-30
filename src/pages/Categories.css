@@ -4,6 +4,14 @@
   gap: var(--space-4);
 }
 
+.categories-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
 .categories-page__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
