@@ -65,7 +65,7 @@ function CategorySection({
   type: CategoryType;
   categories: CategoryWithSpent[];
 }) {
-  const { transactions, updateCategoryLimit, deleteCategory } = useBudgetData();
+  const { transactions, updateCategoryLimit, updateCategoryType, deleteCategory } = useBudgetData();
   const [showAddForm, setShowAddForm] = useState(false);
 
   return (
@@ -91,6 +91,7 @@ function CategorySection({
               key={c.id}
               category={c}
               onEditLimit={(limit) => updateCategoryLimit(c.id, limit)}
+              onChangeType={(type) => updateCategoryType(c.id, type)}
               onDelete={() => deleteCategory(c.id)}
               transactionCount={transactions.filter((t) => t.categoryId === c.id).length}
             />

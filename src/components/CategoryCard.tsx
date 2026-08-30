@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CategoryWithSpent } from "../types";
+import type { CategoryType, CategoryWithSpent } from "../types";
 import { getCategoryColor } from "../config/categories";
 import { useSettings } from "../context/SettingsContext";
 import { ProgressBar } from "./ProgressBar";
@@ -9,6 +9,8 @@ interface CategoryCardProps {
   category: CategoryWithSpent;
   /** When provided, shows an "Edit" affordance for the monthly limit. */
   onEditLimit?: (newLimit: number) => void;
+  /** When provided, shows a "Move to Fixed/Variable" link that switches sections. */
+  onChangeType?: (newType: CategoryType) => void;
   /** When provided, shows a delete control with a lightweight confirm step. */
   onDelete?: () => void;
   /** How many transactions (any month) use this category. A non-zero count
@@ -17,7 +19,7 @@ interface CategoryCardProps {
   transactionCount?: number;
 }
 
-export function CategoryCard({ category, onEditLimit, onDelete, transactionCount = 0 }: CategoryCardProps) {
+export function CategoryCard({ category, onEditLimit, onChangeType, onDelete, transactionCount = 0 }: CategoryCardProps) {
   const { settings } = useSettings();
   const color = getCategoryColor(category.colorVar);
   const remaining = category.limit - category.spent;
@@ -58,6 +60,15 @@ export function CategoryCard({ category, onEditLimit, onDelete, transactionCount
             {onEditLimit && (
               <button type="button" className="category-card__edit-btn" onClick={startEditing}>
                 Edit
+              </button>
+            )}
+            {onChangeType && (
+              <button
+                type="button"
+                className="category-card__edit-btn"
+                onClick={() => onChangeType(category.type === "fixed" ? "variable" : "fixed")}
+              >
+                Move to {category.type === "fixed" ? "Variable" : "Fixed"}
               </button>
             )}
             {onDelete && (

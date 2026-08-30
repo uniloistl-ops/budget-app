@@ -68,6 +68,7 @@ interface BudgetDataContextValue {
 
   addCategory: (input: { label: string; type: CategoryType; limit: number }) => void;
   updateCategoryLimit: (id: CategoryId, limit: number) => void;
+  updateCategoryType: (id: CategoryId, type: CategoryType) => void;
   deleteCategory: (id: CategoryId) => void;
   addTransaction: (input: Omit<Transaction, "id">) => void;
   updateTransaction: (id: string, patch: Partial<Omit<Transaction, "id">>) => void;
@@ -95,6 +96,14 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
   // like a calendar app, rather than remembering where you last left off.
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey());
 
+  // Categories saved before "type" existed won't have one — default those
+  // to "variable" rather than letting them silently vanish from both the
+  // Fixed and Variable sections.
+  const categories = useMemo(
+    () => data.categories.map((c) => (c.type ? c : { ...c, type: "variable" as const })),
+    [data.categories]
+  );
+
   const transactionsForSelectedMonth = useMemo(
     () => data.transactions.filter((t) => t.date.startsWith(selectedMonth)),
     [data.transactions, selectedMonth]
@@ -105,11 +114,11 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
     for (const t of transactionsForSelectedMonth) {
       spentByCategory.set(t.categoryId, (spentByCategory.get(t.categoryId) ?? 0) + t.amount);
     }
-    return data.categories.map((c) => ({ ...c, spent: spentByCategory.get(c.id) ?? 0 }));
-  }, [data.categories, transactionsForSelectedMonth]);
+    return categories.map((c) => ({ ...c, spent: spentByCategory.get(c.id) ?? 0 }));
+  }, [categories, transactionsForSelectedMonth]);
 
   const value: BudgetDataContextValue = {
-    categories: data.categories,
+    categories,
     categoriesWithSpent,
     transactions: data.transactions,
     transactionsForSelectedMonth,
@@ -144,6 +153,10 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
         ...data,
         categories: data.categories.map((c) => (c.id === id ? { ...c, limit: Math.max(0, limit) } : c)),
       });
+    },
+
+    updateCategoryType(id, type) {
+      setData({ ...data, categories: data.categories.map((c) => (c.id === id ? { ...c, type } : c)) });
     },
 
     deleteCategory(id) {
