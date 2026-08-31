@@ -66,6 +66,17 @@
   flex-wrap: wrap;
 }
 
+.paycheck__hours-mode {
+  margin-top: var(--space-2);
+}
+
+.paycheck__field-label {
+  margin: var(--space-3) 0 0 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
 .paycheck__field input,
 .paycheck__field select {
   font-family: inherit;

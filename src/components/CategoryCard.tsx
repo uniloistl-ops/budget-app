@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CategoryType, CategoryWithSpent } from "../types";
+import type { CategoryType, CategoryWithSpent, Folder } from "../types";
 import { COLOR_VAR_POOL, getCategoryColor } from "../config/categories";
 import { useSettings } from "../context/SettingsContext";
 import { CardMenu, type CardMenuItem } from "./CardMenu";
@@ -10,11 +10,12 @@ interface CategoryEditPatch {
   label: string;
   limit: number;
   colorVar: string;
+  folderId: string | null;
 }
 
 interface CategoryCardProps {
   category: CategoryWithSpent;
-  /** When provided, shows an "Edit" affordance for name, limit and color. */
+  /** When provided, shows an "Edit" affordance for name, limit, color and folder. */
   onEdit?: (patch: CategoryEditPatch) => void;
   /** When provided, offers "Move to Fixed/Variable" from the menu. */
   onChangeType?: (newType: CategoryType) => void;
@@ -24,9 +25,21 @@ interface CategoryCardProps {
    * blocks deletion — otherwise those transactions would silently vanish
    * from totals with no way back. */
   transactionCount?: number;
+  /** Existing folders, offered as options in the edit form's Folder picker. */
+  folders?: Folder[];
+  /** Creates a new folder and returns its id, for the "+ New folder…" quick-create. */
+  onCreateFolder?: (label: string) => string;
 }
 
-export function CategoryCard({ category, onEdit, onChangeType, onDelete, transactionCount = 0 }: CategoryCardProps) {
+export function CategoryCard({
+  category,
+  onEdit,
+  onChangeType,
+  onDelete,
+  transactionCount = 0,
+  folders = [],
+  onCreateFolder,
+}: CategoryCardProps) {
   const { settings } = useSettings();
   const color = getCategoryColor(category.colorVar);
   const remaining = category.limit - category.spent;
@@ -34,6 +47,9 @@ export function CategoryCard({ category, onEdit, onChangeType, onDelete, transac
   const [draftLabel, setDraftLabel] = useState(category.label);
   const [draftLimit, setDraftLimit] = useState(String(category.limit));
   const [draftColorVar, setDraftColorVar] = useState(category.colorVar);
+  const [draftFolderId, setDraftFolderId] = useState<string | null>(category.folderId ?? null);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [showBlockedNotice, setShowBlockedNotice] = useState(false);
   const isBlocked = transactionCount > 0;
@@ -42,6 +58,8 @@ export function CategoryCard({ category, onEdit, onChangeType, onDelete, transac
     setDraftLabel(category.label);
     setDraftLimit(String(category.limit));
     setDraftColorVar(category.colorVar);
+    setDraftFolderId(category.folderId ?? null);
+    setCreatingFolder(false);
     setEditing(true);
   }
 
@@ -56,8 +74,16 @@ export function CategoryCard({ category, onEdit, onChangeType, onDelete, transac
   function save() {
     const limit = Number(draftLimit);
     if (!draftLabel.trim() || !Number.isFinite(limit) || limit < 0) return;
-    onEdit?.({ label: draftLabel.trim(), limit, colorVar: draftColorVar });
+    onEdit?.({ label: draftLabel.trim(), limit, colorVar: draftColorVar, folderId: draftFolderId });
     setEditing(false);
+  }
+
+  function createFolder() {
+    if (!newFolderName.trim() || !onCreateFolder) return;
+    const id = onCreateFolder(newFolderName.trim());
+    setDraftFolderId(id);
+    setNewFolderName("");
+    setCreatingFolder(false);
   }
 
   const menuItems: CardMenuItem[] = [];
@@ -71,6 +97,9 @@ export function CategoryCard({ category, onEdit, onChangeType, onDelete, transac
   if (onDelete) menuItems.push({ label: "Delete", onClick: handleDeleteRequest, destructive: true });
 
   const showMenu = menuItems.length > 0 && !editing && !confirmingDelete && !showBlockedNotice;
+
+  const draftLimitNum = Number(draftLimit);
+  const limitBelowSpent = Number.isFinite(draftLimitNum) && draftLimitNum > 0 && draftLimitNum < category.spent;
 
   return (
     <div className="category-card">
@@ -136,6 +165,11 @@ export function CategoryCard({ category, onEdit, onChangeType, onDelete, transac
               }}
             />
           </div>
+          {limitBelowSpent && (
+            <p className="category-card__limit-warning">
+              You've already spent €{category.spent.toFixed(0)} this month — this limit is below that.
+            </p>
+          )}
 
           <span>Color</span>
           <div className="category-card__swatches" role="radiogroup" aria-label="Category color">
@@ -152,6 +186,57 @@ export function CategoryCard({ category, onEdit, onChangeType, onDelete, transac
               />
             ))}
           </div>
+
+          {onCreateFolder && (
+            <>
+              <span>Folder</span>
+              {creatingFolder ? (
+                <div className="category-card__edit-input">
+                  <input
+                    type="text"
+                    placeholder="e.g. Household"
+                    autoFocus
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") createFolder();
+                      if (e.key === "Escape") setCreatingFolder(false);
+                    }}
+                  />
+                </div>
+              ) : (
+                <select
+                  className="category-card__edit-text"
+                  value={draftFolderId ?? ""}
+                  onChange={(e) => {
+                    if (e.target.value === "__new__") {
+                      setCreatingFolder(true);
+                    } else {
+                      setDraftFolderId(e.target.value || null);
+                    }
+                  }}
+                >
+                  <option value="">No folder</option>
+                  {folders.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.label}
+                    </option>
+                  ))}
+                  <option value="__new__">+ New folder…</option>
+                </select>
+              )}
+              {creatingFolder && (
+                <div className="category-card__edit-actions">
+                  <button type="button" className="category-card__save-btn" onClick={createFolder}>
+                    Create
+                  </button>
+                  <button type="button" className="category-card__cancel-btn" onClick={() => setCreatingFolder(false)}>
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
           <div className="category-card__edit-actions">
             <button type="button" className="category-card__save-btn" onClick={save}>

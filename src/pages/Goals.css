@@ -12,6 +12,15 @@
   flex-wrap: wrap;
 }
 
+.goals-page__title-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  margin-right: var(--space-2);
+  vertical-align: -4px;
+  color: var(--accent);
+}
+
 .goals-page__list {
   display: flex;
   flex-direction: column;

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { BudgetPieChart, type PieSlice } from "../components/BudgetPieChart";
 import { CardMenu } from "../components/CardMenu";
 import { CategoryCard } from "../components/CategoryCard";
+import { IconTrendingDown, IconTrendingUp } from "../components/icons";
 import { MonthNav } from "../components/MonthNav";
 import { TransactionRow } from "../components/TransactionRow";
 import { mockUpcoming } from "../data/mockData";
@@ -256,93 +257,98 @@ export function Overview() {
         </Link>
       </header>
 
-      <section className="card overview__income-card">
-        <div className="overview__income-header">
-          <div>
-            <h2>Income</h2>
-            <p className="overview__hint">Where your money comes from this month — your paycheck, plus anything else.</p>
-          </div>
-          {!showAddIncomeForm && (
-            <button type="button" className="overview__income-add-link" onClick={() => setShowAddIncomeForm(true)}>
-              + Add income
-            </button>
-          )}
-        </div>
-
-        {showAddIncomeForm && <AddIncomeSourceForm onClose={() => setShowAddIncomeForm(false)} />}
-
-        {incomeSourcesForSelectedMonth.length > 0 ? (
-          <div className="overview__income-list">
-            {incomeSourcesForSelectedMonth.map((s) => (
-              <IncomeSourceRow key={s.id} source={s} />
-            ))}
-          </div>
-        ) : (
-          !showAddIncomeForm && (
-            <p className="overview__hint">
-              No income added yet — <Link to="/paycheck">calculate your paycheck</Link> or add another source above.
-            </p>
-          )
-        )}
-
-        {hasIncome && (
-          <>
-            <div className="overview__income-total">
-              <span>Total income</span>
-              <strong>€{incomeForSelectedMonth.toFixed(0)}</strong>
+      <div className="overview__hero-row">
+        <section className="card overview__chart-card">
+          <div className="overview__chart-toolbar">
+            {usingPayday ? (
+              <div className="overview__payday-badge">
+                {daysUntilPayday === 0 ? "Payday today" : `Payday in ${daysUntilPayday} day${daysUntilPayday === 1 ? "" : "s"}`}
+              </div>
+            ) : (
+              <span />
+            )}
+            <div className="overview__chart-toggle" role="radiogroup" aria-label="Chart grouping">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={chartView === "category"}
+                className={"overview__chart-toggle-btn" + (chartView === "category" ? " overview__chart-toggle-btn--active" : "")}
+                onClick={() => setChartView("category")}
+              >
+                By category
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={chartView === "type"}
+                className={"overview__chart-toggle-btn" + (chartView === "type" ? " overview__chart-toggle-btn--active" : "")}
+                onClick={() => setChartView("type")}
+              >
+                Fixed vs. variable
+              </button>
             </div>
-            <div className="overview__income-vs-spend-bar">
-              <div
-                className="overview__income-vs-spend-fill"
-                style={{
-                  width: `${Math.min(100, (totalSpent / incomeForSelectedMonth) * 100)}%`,
-                  background: spendingLessThanEarning ? "var(--status-good)" : "var(--status-critical)",
-                }}
-              />
-            </div>
-            <p className="overview__income-vs-spend-sentence">
-              {spendingLessThanEarning ? (
-                <>You're spending <strong className="overview__good-text">less</strong> than you earn this month.</>
-              ) : (
-                <>You're spending <strong className="overview__critical-text">more</strong> than you earn this month.</>
-              )}
-            </p>
-          </>
-        )}
-      </section>
+          </div>
+          <BudgetPieChart slices={chartSlices} centerLabel="spent so far" centerValue={`€${totalSpent.toFixed(0)}`} />
+        </section>
 
-      <section className="card overview__chart-card">
-        <div className="overview__chart-toolbar">
-          {usingPayday ? (
-            <div className="overview__payday-badge">
-              {daysUntilPayday === 0 ? "Payday today" : `Payday in ${daysUntilPayday} day${daysUntilPayday === 1 ? "" : "s"}`}
+        <section className="card overview__income-card">
+          <div className="overview__income-header">
+            <div>
+              <h2>
+                <IconTrendingUp className="overview__section-icon" aria-hidden="true" />
+                Income
+              </h2>
+              <p className="overview__hint">Where your money comes from this month — your paycheck, plus anything else.</p>
+            </div>
+            {!showAddIncomeForm && (
+              <button type="button" className="overview__income-add-link" onClick={() => setShowAddIncomeForm(true)}>
+                + Add income
+              </button>
+            )}
+          </div>
+
+          {showAddIncomeForm && <AddIncomeSourceForm onClose={() => setShowAddIncomeForm(false)} />}
+
+          {incomeSourcesForSelectedMonth.length > 0 ? (
+            <div className="overview__income-list">
+              {incomeSourcesForSelectedMonth.map((s) => (
+                <IncomeSourceRow key={s.id} source={s} />
+              ))}
             </div>
           ) : (
-            <span />
+            !showAddIncomeForm && (
+              <p className="overview__hint">
+                No income added yet — <Link to="/paycheck">calculate your paycheck</Link> or add another source above.
+              </p>
+            )
           )}
-          <div className="overview__chart-toggle" role="radiogroup" aria-label="Chart grouping">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={chartView === "category"}
-              className={"overview__chart-toggle-btn" + (chartView === "category" ? " overview__chart-toggle-btn--active" : "")}
-              onClick={() => setChartView("category")}
-            >
-              By category
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={chartView === "type"}
-              className={"overview__chart-toggle-btn" + (chartView === "type" ? " overview__chart-toggle-btn--active" : "")}
-              onClick={() => setChartView("type")}
-            >
-              Fixed vs. variable
-            </button>
-          </div>
-        </div>
-        <BudgetPieChart slices={chartSlices} centerLabel="spent so far" centerValue={`€${totalSpent.toFixed(0)}`} />
-      </section>
+
+          {hasIncome && (
+            <>
+              <div className="overview__income-total">
+                <span>Total income</span>
+                <strong>€{incomeForSelectedMonth.toFixed(0)}</strong>
+              </div>
+              <div className="overview__income-vs-spend-bar">
+                <div
+                  className="overview__income-vs-spend-fill"
+                  style={{
+                    width: `${Math.min(100, (totalSpent / incomeForSelectedMonth) * 100)}%`,
+                    background: spendingLessThanEarning ? "var(--status-good)" : "var(--status-critical)",
+                  }}
+                />
+              </div>
+              <p className="overview__income-vs-spend-sentence">
+                {spendingLessThanEarning ? (
+                  <>You're spending <strong className="overview__good-text">less</strong> than you earn this month.</>
+                ) : (
+                  <>You're spending <strong className="overview__critical-text">more</strong> than you earn this month.</>
+                )}
+              </p>
+            </>
+          )}
+        </section>
+      </div>
 
       {fixedCategories.length > 0 && (
         <section>
@@ -403,7 +409,10 @@ export function Overview() {
 
       {debts.length > 0 && (
         <section className="card overview__debt-card">
-          <h2>Debt</h2>
+          <h2>
+            <IconTrendingDown className="overview__section-icon" aria-hidden="true" />
+            Debt
+          </h2>
           <p className="overview__debt-total">
             You owe <strong>€{totalDebt.toFixed(0)}</strong> across {debts.length} debt{debts.length === 1 ? "" : "s"}.
           </p>

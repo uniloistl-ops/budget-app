@@ -15,6 +15,17 @@ export interface Category {
   /** "fixed" = same amount every month (rent, insurance, subscriptions);
    * "variable" = changes month to month (groceries, fun money). */
   type: CategoryType;
+  /** Which folder this category is filed under on the Transactions page.
+   * `null`/absent means it shows up in the catch-all "Other" folder. */
+  folderId?: string | null;
+}
+
+/** A named group of categories — e.g. "Household", "Debt" — used purely to
+ * organize the Transactions page (click a folder, see what's inside)
+ * instead of showing every category flat all at once. */
+export interface Folder {
+  id: string;
+  label: string;
 }
 
 /** A category plus how much has actually been spent this month — derived

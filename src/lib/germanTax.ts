@@ -185,10 +185,16 @@ export const GERMAN_STATES: GermanState[] = [
 
 export interface PaycheckInputs {
   employmentType: EmploymentType;
-  payMode: "hourly" | "monthly";
+  payMode: "hourly" | "monthly" | "yearly";
   hourlyRate: number;
   hoursPerWeek: number;
+  /** "weekly" = estimate monthly hours from hoursPerWeek; "exact" = use
+   * exactHoursThisMonth directly, for real-world variation (overtime,
+   * part weeks, shift work). Only meaningful when payMode === "hourly". */
+  hoursEntryMode: "weekly" | "exact";
+  exactHoursThisMonth: number;
   monthlyGross: number;
+  yearlyGross: number;
   taxClass: TaxClass;
   stateId: string;
   churchTax: boolean;
@@ -198,6 +204,9 @@ export interface PaycheckInputs {
   zusatzbeitrag: number; // percent, e.g. 2.9
   privateMonthlyPremium: number;
   minijobRvExempt: boolean; // filed a Befreiungsantrag from pension insurance
+  /** Whether this pay lands in the month it's for, or the following one —
+   * used only by the Paycheck page's "Apply" action, never by the tax math. */
+  paymentTiming: "sameMonth" | "nextMonth";
 }
 
 export interface PaycheckLineItem {
@@ -215,12 +224,24 @@ export interface PaycheckResult {
   totalDeductionsMonthly: number;
 }
 
+/** How many hours count toward this month's pay — either the exact figure
+ * you worked, or an estimate from a typical week (52 weeks/year ÷ 12
+ * months, the standard conversion factor). Shared by the gross calculation
+ * and the per-hour figure below, so they can never disagree. */
+function monthlyHours(inputs: PaycheckInputs): number {
+  return inputs.hoursEntryMode === "exact" ? inputs.exactHoursThisMonth : inputs.hoursPerWeek * (52 / 12);
+}
+
 export function computeMonthlyGross(inputs: PaycheckInputs): number {
-  if (inputs.payMode === "hourly") {
-    // 52 weeks/year ÷ 12 months — the standard conversion factor.
-    return inputs.hourlyRate * inputs.hoursPerWeek * (52 / 12);
+  switch (inputs.payMode) {
+    case "hourly":
+      return inputs.hourlyRate * monthlyHours(inputs);
+    case "yearly":
+      return inputs.yearlyGross / 12;
+    case "monthly":
+    default:
+      return inputs.monthlyGross;
   }
-  return inputs.monthlyGross;
 }
 
 export function computePaycheck(inputs: PaycheckInputs): PaycheckResult {
@@ -351,7 +372,8 @@ export function computePaycheck(inputs: PaycheckInputs): PaycheckResult {
   const totalDeductionsMonthly = lineItems.reduce((sum, item) => sum + item.monthlyAmount, 0);
   const netMonthly = grossMonthly - totalDeductionsMonthly;
 
-  const netPerHour = inputs.payMode === "hourly" && inputs.hoursPerWeek > 0 ? netMonthly / (inputs.hoursPerWeek * (52 / 12)) : null;
+  const hoursThisMonth = monthlyHours(inputs);
+  const netPerHour = inputs.payMode === "hourly" && hoursThisMonth > 0 ? netMonthly / hoursThisMonth : null;
 
   return { grossMonthly, netMonthly, netPerHour, lineItems, totalDeductionsMonthly };
 }

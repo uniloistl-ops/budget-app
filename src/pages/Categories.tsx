@@ -66,7 +66,7 @@ function CategorySection({
   type: CategoryType;
   categories: CategoryWithSpent[];
 }) {
-  const { transactions, updateCategory, deleteCategory } = useBudgetData();
+  const { transactions, folders, addFolder, updateCategory, deleteCategory } = useBudgetData();
   const [showAddForm, setShowAddForm] = useState(false);
 
   return (
@@ -95,6 +95,8 @@ function CategorySection({
               onChangeType={(type) => updateCategory(c.id, { type })}
               onDelete={() => deleteCategory(c.id)}
               transactionCount={transactions.filter((t) => t.categoryId === c.id).length}
+              folders={folders}
+              onCreateFolder={(label) => addFolder({ label })}
             />
           ))}
         </div>

@@ -10,7 +10,7 @@ import {
 import { usePersistentState } from "../lib/usePersistentState";
 import { MonthNav } from "../components/MonthNav";
 import { useBudgetData } from "../context/BudgetDataContext";
-import { formatMonthLabel } from "../lib/dates";
+import { formatMonthLabel, shiftMonthKey } from "../lib/dates";
 import "./Paycheck.css";
 
 const DEFAULT_INPUTS: PaycheckInputs = {
@@ -18,7 +18,10 @@ const DEFAULT_INPUTS: PaycheckInputs = {
   payMode: "monthly",
   hourlyRate: 0,
   hoursPerWeek: 0,
+  hoursEntryMode: "weekly",
+  exactHoursThisMonth: 0,
   monthlyGross: 0,
+  yearlyGross: 0,
   taxClass: "I",
   stateId: "BE",
   churchTax: false,
@@ -28,6 +31,7 @@ const DEFAULT_INPUTS: PaycheckInputs = {
   zusatzbeitrag: 2.9,
   privateMonthlyPremium: 0,
   minijobRvExempt: true,
+  paymentTiming: "sameMonth",
 };
 
 const EMPLOYMENT_TYPES: { value: EmploymentType; label: string; hint: string }[] = [
@@ -35,6 +39,12 @@ const EMPLOYMENT_TYPES: { value: EmploymentType; label: string; hint: string }[]
   { value: "student", label: "Working student", hint: "Werkstudent, ≤20h/week in term" },
   { value: "midijob", label: "Midijob", hint: `€${MINIJOB_GRENZE}–€${MIDIJOB_UPPER}/month` },
   { value: "minijob", label: "Minijob", hint: `Up to €${MINIJOB_GRENZE}/month` },
+];
+
+const PAY_MODES: { value: PaycheckInputs["payMode"]; label: string }[] = [
+  { value: "monthly", label: "Monthly salary" },
+  { value: "yearly", label: "Yearly salary" },
+  { value: "hourly", label: "Hourly wage" },
 ];
 
 const TAX_CLASSES: { value: TaxClass; label: string; hint: string }[] = [
@@ -52,7 +62,7 @@ function euro(n: number): string {
 
 export function Paycheck() {
   const [inputs, setInputs] = usePersistentState<PaycheckInputs>("calm-budget:paycheck", DEFAULT_INPUTS);
-  const { selectedMonth, paycheckIncomeForSelectedMonth, setIncomeForSelectedMonth } = useBudgetData();
+  const { selectedMonth, paycheckIncomeForMonth, setIncomeForMonth } = useBudgetData();
   const monthLabel = formatMonthLabel(selectedMonth);
 
   function set<K extends keyof PaycheckInputs>(key: K, value: PaycheckInputs[K]) {
@@ -62,8 +72,15 @@ export function Paycheck() {
   const result = computePaycheck(inputs);
   const grossForBar = Math.max(result.grossMonthly, 0.01);
   const netPct = Math.max(0, Math.min(100, (result.netMonthly / grossForBar) * 100));
+
+  // Payment timing decides which month Apply actually writes to — the
+  // estimate above always describes the viewed month; only where the
+  // money lands follows this toggle.
+  const targetMonth = inputs.paymentTiming === "nextMonth" ? shiftMonthKey(selectedMonth, 1) : selectedMonth;
+  const targetMonthLabel = formatMonthLabel(targetMonth);
+  const paycheckIncomeForTargetMonth = paycheckIncomeForMonth(targetMonth);
   const alreadyApplied =
-    paycheckIncomeForSelectedMonth !== undefined && Math.abs(paycheckIncomeForSelectedMonth - result.netMonthly) < 0.01;
+    paycheckIncomeForTargetMonth !== undefined && Math.abs(paycheckIncomeForTargetMonth - result.netMonthly) < 0.01;
 
   const isMinijob = inputs.employmentType === "minijob";
   const isStudent = inputs.employmentType === "student";
@@ -106,27 +123,21 @@ export function Paycheck() {
       <section className="card paycheck__section">
         <h2>Your pay</h2>
         <div className="settings-page__options" role="radiogroup" aria-label="How you're paid">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={inputs.payMode === "monthly"}
-            className={"settings-page__option" + (inputs.payMode === "monthly" ? " settings-page__option--active" : "")}
-            onClick={() => set("payMode", "monthly")}
-          >
-            Monthly salary
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={inputs.payMode === "hourly"}
-            className={"settings-page__option" + (inputs.payMode === "hourly" ? " settings-page__option--active" : "")}
-            onClick={() => set("payMode", "hourly")}
-          >
-            Hourly wage
-          </button>
+          {PAY_MODES.map((pm) => (
+            <button
+              key={pm.value}
+              type="button"
+              role="radio"
+              aria-checked={inputs.payMode === pm.value}
+              className={"settings-page__option" + (inputs.payMode === pm.value ? " settings-page__option--active" : "")}
+              onClick={() => set("payMode", pm.value)}
+            >
+              {pm.label}
+            </button>
+          ))}
         </div>
 
-        {inputs.payMode === "monthly" ? (
+        {inputs.payMode === "monthly" && (
           <label className="paycheck__field">
             <span>Gross monthly salary</span>
             <div className="paycheck__input-euro">
@@ -139,32 +150,85 @@ export function Paycheck() {
               <span>€</span>
             </div>
           </label>
-        ) : (
-          <div className="paycheck__field-row">
-            <label className="paycheck__field">
-              <span>Hourly rate</span>
-              <div className="paycheck__input-euro">
-                <input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={inputs.hourlyRate}
-                  onChange={(e) => set("hourlyRate", Number(e.target.value))}
-                />
-                <span>€</span>
-              </div>
-            </label>
-            <label className="paycheck__field">
-              <span>Hours per week</span>
+        )}
+
+        {inputs.payMode === "yearly" && (
+          <label className="paycheck__field">
+            <span>Gross yearly salary</span>
+            <div className="paycheck__input-euro">
               <input
                 type="number"
                 min={0}
-                max={80}
-                value={inputs.hoursPerWeek}
-                onChange={(e) => set("hoursPerWeek", Number(e.target.value))}
+                value={inputs.yearlyGross}
+                onChange={(e) => set("yearlyGross", Number(e.target.value))}
               />
-            </label>
-          </div>
+              <span>€</span>
+            </div>
+          </label>
+        )}
+
+        {inputs.payMode === "hourly" && (
+          <>
+            <div className="settings-page__options paycheck__hours-mode" role="radiogroup" aria-label="How to count hours">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={inputs.hoursEntryMode === "weekly"}
+                className={"settings-page__option" + (inputs.hoursEntryMode === "weekly" ? " settings-page__option--active" : "")}
+                onClick={() => set("hoursEntryMode", "weekly")}
+              >
+                Typical hours/week
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={inputs.hoursEntryMode === "exact"}
+                className={"settings-page__option" + (inputs.hoursEntryMode === "exact" ? " settings-page__option--active" : "")}
+                onClick={() => set("hoursEntryMode", "exact")}
+              >
+                Exact hours this month
+              </button>
+            </div>
+
+            <div className="paycheck__field-row">
+              <label className="paycheck__field">
+                <span>Hourly rate</span>
+                <div className="paycheck__input-euro">
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={inputs.hourlyRate}
+                    onChange={(e) => set("hourlyRate", Number(e.target.value))}
+                  />
+                  <span>€</span>
+                </div>
+              </label>
+              {inputs.hoursEntryMode === "weekly" ? (
+                <label className="paycheck__field">
+                  <span>Hours per week</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={80}
+                    value={inputs.hoursPerWeek}
+                    onChange={(e) => set("hoursPerWeek", Number(e.target.value))}
+                  />
+                </label>
+              ) : (
+                <label className="paycheck__field">
+                  <span>Total hours this month</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={400}
+                    value={inputs.exactHoursThisMonth}
+                    onChange={(e) => set("exactHoursThisMonth", Number(e.target.value))}
+                  />
+                </label>
+              )}
+            </div>
+          </>
         )}
 
         {isMinijob && result.grossMonthly > MINIJOB_GRENZE && (
@@ -173,6 +237,28 @@ export function Paycheck() {
             accurate estimate.
           </p>
         )}
+
+        <p className="paycheck__field-label">When does it land in your account?</p>
+        <div className="settings-page__options" role="radiogroup" aria-label="When you get paid">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={inputs.paymentTiming === "sameMonth"}
+            className={"settings-page__option" + (inputs.paymentTiming === "sameMonth" ? " settings-page__option--active" : "")}
+            onClick={() => set("paymentTiming", "sameMonth")}
+          >
+            I get paid this month
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={inputs.paymentTiming === "nextMonth"}
+            className={"settings-page__option" + (inputs.paymentTiming === "nextMonth" ? " settings-page__option--active" : "")}
+            onClick={() => set("paymentTiming", "nextMonth")}
+          >
+            I get paid next month
+          </button>
+        </div>
       </section>
 
       {isMinijob && (
@@ -338,14 +424,14 @@ export function Paycheck() {
 
         <div className="paycheck__apply-row">
           {alreadyApplied ? (
-            <span className="paycheck__applied">✓ Applied as {monthLabel}'s income on the Overview</span>
+            <span className="paycheck__applied">✓ Applied as {targetMonthLabel}'s income on the Overview</span>
           ) : (
             <button
               type="button"
               className="paycheck__apply-btn"
-              onClick={() => setIncomeForSelectedMonth(result.netMonthly)}
+              onClick={() => setIncomeForMonth(targetMonth, result.netMonthly)}
             >
-              Apply as {monthLabel} income
+              Apply as {targetMonthLabel} income
             </button>
           )}
         </div>

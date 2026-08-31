@@ -152,3 +152,9 @@
   color: var(--status-critical);
   font-weight: 700;
 }
+
+.category-card__limit-warning {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--status-warning);
+}

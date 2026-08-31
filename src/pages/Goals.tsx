@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { CardMenu } from "../components/CardMenu";
+import { IconTarget } from "../components/icons";
 import { ProgressBar } from "../components/ProgressBar";
 import { useBudgetData } from "../context/BudgetDataContext";
 import type { Goal } from "../types";
@@ -133,7 +134,10 @@ export function Goals() {
     <div className="goals-page">
       <header className="goals-page__header">
         <div>
-          <h1>Goals</h1>
+          <h1>
+            <IconTarget className="goals-page__title-icon" aria-hidden="true" />
+            Goals
+          </h1>
           <p>Things you're saving toward, and how close you are.</p>
         </div>
         {!showAddForm && (

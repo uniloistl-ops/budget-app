@@ -44,6 +44,27 @@
   opacity: 0.9;
 }
 
+.overview__hero-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 780px) {
+  .overview__hero-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.overview__section-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-right: 6px;
+  vertical-align: -3px;
+  color: var(--text-secondary);
+}
+
 .overview__income-card {
   display: flex;
   flex-direction: column;
