@@ -19,16 +19,18 @@
   --text-secondary: #6c6a63;
   --text-muted: #96938a;
 
-  /* --- category palette (fixed order, never cycled) --- */
-  --cat-rent: #2a78d6;
-  --cat-groceries: #eb6834;
-  --cat-transport: #1baf7a;
-  --cat-subscriptions: #eda100;
-  --cat-savings: #e87ba4;
-  --cat-fun: #4a3aa7;
+  /* --- category palette (fixed order, never cycled) ---
+     Deeper, less saturated than a raw crayon-box hue rotation — reads as
+     a set of chosen accent colors instead of neon marker colors. */
+  --cat-rent: #3567a6;
+  --cat-groceries: #bd6539;
+  --cat-transport: #2e8f68;
+  --cat-subscriptions: #b3822c;
+  --cat-savings: #b15f80;
+  --cat-fun: #493c8a;
   /* two more slots, assigned to categories you add yourself */
-  --cat-extra-1: #008300;
-  --cat-extra-2: #e34948;
+  --cat-extra-1: #3c7a49;
+  --cat-extra-2: #ab453f;
 
   /* --- status palette (reserved, never reused as a category color) --- */
   --status-good: #0ca30c;
@@ -44,8 +46,8 @@
   --accent: #2a78d6;
   --accent-ink: #ffffff;
 
-  --radius-card: 18px;
-  --radius-control: 12px;
+  --radius-card: 14px;
+  --radius-control: 9px;
   --shadow-card: 0 1px 2px rgba(58, 57, 52, 0.05), 0 4px 16px rgba(58, 57, 52, 0.05);
 
   --font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -76,14 +78,14 @@
   --text-secondary: #c3c0b6;
   --text-muted: #918e84;
 
-  --cat-rent: #5b9ce8;
-  --cat-groceries: #f08a5d;
-  --cat-transport: #3fc994;
-  --cat-subscriptions: #e5ac33;
-  --cat-savings: #ef9dbe;
-  --cat-fun: #9085e9;
-  --cat-extra-1: #008300;
-  --cat-extra-2: #e57373;
+  --cat-rent: #6c93c4;
+  --cat-groceries: #cc8760;
+  --cat-transport: #52ab84;
+  --cat-subscriptions: #cca24f;
+  --cat-savings: #cc8ba3;
+  --cat-fun: #8478c9;
+  --cat-extra-1: #5a9a67;
+  --cat-extra-2: #c07370;
 
   --status-good: #3fbf3f;
   --status-warning: #e5ac33;

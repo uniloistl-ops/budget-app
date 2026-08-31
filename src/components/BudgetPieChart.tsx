@@ -56,8 +56,8 @@ export function BudgetPieChart({ categories, centerLabel, centerValue }: BudgetP
               data={data}
               dataKey="value"
               nameKey="label"
-              innerRadius={78}
-              outerRadius={110}
+              innerRadius={86}
+              outerRadius={108}
               paddingAngle={paddingAngle}
               cornerRadius={cornerRadius}
               stroke="none"

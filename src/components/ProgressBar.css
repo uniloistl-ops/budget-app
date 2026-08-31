@@ -6,7 +6,7 @@
 
 .progress-bar__track {
   flex: 1;
-  height: 10px;
+  height: 8px;
   border-radius: 999px;
   background: var(--color-surface-sunken);
   overflow: hidden;
@@ -19,7 +19,7 @@
 }
 
 .progress-bar__status {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   white-space: nowrap;
 }

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { CardMenu } from "../components/CardMenu";
 import { ProgressBar } from "../components/ProgressBar";
 import { useBudgetData } from "../context/BudgetDataContext";
 import type { Goal } from "../types";
@@ -71,12 +72,19 @@ function GoalCard({ goal }: { goal: Goal }) {
             <span className="goals-page__amounts">
               €{goal.savedAmount.toFixed(0)} of €{goal.targetAmount.toFixed(0)}
             </span>
-            <button type="button" className="goals-page__edit-btn" onClick={() => { setDraftSaved(String(goal.savedAmount)); setEditing(true); }}>
-              Edit
-            </button>
-            <button type="button" className="goals-page__delete-btn" onClick={() => setConfirmingDelete(true)} aria-label={`Delete ${goal.label}`}>
-              ×
-            </button>
+            <CardMenu
+              label={`${goal.label} actions`}
+              items={[
+                {
+                  label: "Edit",
+                  onClick: () => {
+                    setDraftSaved(String(goal.savedAmount));
+                    setEditing(true);
+                  },
+                },
+                { label: "Delete", onClick: () => setConfirmingDelete(true), destructive: true },
+              ]}
+            />
           </div>
         )}
         {confirmingDelete && (

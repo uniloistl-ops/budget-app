@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Category, Transaction } from "../types";
 import { getCategoryColor } from "../config/categories";
+import { CardMenu } from "./CardMenu";
 import "./TransactionRow.css";
 
 const UNKNOWN_CATEGORY: Category = {
@@ -114,20 +115,14 @@ export function TransactionRow({ transaction, categories, onUpdate, onDelete }: 
         <>
           <span className="transaction-row__date">{dateLabel}</span>
           <span className="transaction-row__amount">€{transaction.amount.toFixed(2)}</span>
-          {onUpdate && (
-            <button type="button" className="transaction-row__edit-btn" onClick={startEditing}>
-              Edit
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              className="transaction-row__delete"
-              onClick={() => setConfirming(true)}
-              aria-label={`Delete ${transaction.description}`}
-            >
-              ×
-            </button>
+          {(onUpdate || onDelete) && (
+            <CardMenu
+              label={`${transaction.description} actions`}
+              items={[
+                ...(onUpdate ? [{ label: "Edit", onClick: startEditing }] : []),
+                ...(onDelete ? [{ label: "Delete", onClick: () => setConfirming(true), destructive: true }] : []),
+              ]}
+            />
           )}
         </>
       )}

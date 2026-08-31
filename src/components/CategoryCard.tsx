@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { CategoryType, CategoryWithSpent } from "../types";
 import { getCategoryColor } from "../config/categories";
 import { useSettings } from "../context/SettingsContext";
+import { CardMenu, type CardMenuItem } from "./CardMenu";
 import { ProgressBar } from "./ProgressBar";
 import "./CategoryCard.css";
 
@@ -9,9 +10,9 @@ interface CategoryCardProps {
   category: CategoryWithSpent;
   /** When provided, shows an "Edit" affordance for the monthly limit. */
   onEditLimit?: (newLimit: number) => void;
-  /** When provided, shows a "Move to Fixed/Variable" link that switches sections. */
+  /** When provided, offers "Move to Fixed/Variable" from the menu. */
   onChangeType?: (newType: CategoryType) => void;
-  /** When provided, shows a delete control with a lightweight confirm step. */
+  /** When provided, offers delete from the menu, with a lightweight confirm step. */
   onDelete?: () => void;
   /** How many transactions (any month) use this category. A non-zero count
    * blocks deletion — otherwise those transactions would silently vanish
@@ -29,17 +30,17 @@ export function CategoryCard({ category, onEditLimit, onChangeType, onDelete, tr
   const [showBlockedNotice, setShowBlockedNotice] = useState(false);
   const isBlocked = transactionCount > 0;
 
-  function handleDeleteClick() {
+  function startEditing() {
+    setDraft(String(category.limit));
+    setEditing(true);
+  }
+
+  function handleDeleteRequest() {
     if (isBlocked) {
       setShowBlockedNotice(true);
     } else {
       setConfirmingDelete(true);
     }
-  }
-
-  function startEditing() {
-    setDraft(String(category.limit));
-    setEditing(true);
   }
 
   function save() {
@@ -50,46 +51,32 @@ export function CategoryCard({ category, onEditLimit, onChangeType, onDelete, tr
     setEditing(false);
   }
 
+  const menuItems: CardMenuItem[] = [];
+  if (onEditLimit) menuItems.push({ label: "Edit limit", onClick: startEditing });
+  if (onChangeType) {
+    menuItems.push({
+      label: `Move to ${category.type === "fixed" ? "Variable" : "Fixed"}`,
+      onClick: () => onChangeType(category.type === "fixed" ? "variable" : "fixed"),
+    });
+  }
+  if (onDelete) menuItems.push({ label: "Delete", onClick: handleDeleteRequest, destructive: true });
+
+  const showMenu = menuItems.length > 0 && !editing && !confirmingDelete && !showBlockedNotice;
+
   return (
     <div className="category-card">
       <div className="category-card__header">
         <span className="category-card__dot" style={{ background: color }} aria-hidden="true" />
         <h3 className="category-card__label">{category.label}</h3>
-        {!editing && !confirmingDelete && !showBlockedNotice && (
-          <>
-            {onEditLimit && (
-              <button type="button" className="category-card__edit-btn" onClick={startEditing}>
-                Edit
-              </button>
-            )}
-            {onChangeType && (
-              <button
-                type="button"
-                className="category-card__edit-btn"
-                onClick={() => onChangeType(category.type === "fixed" ? "variable" : "fixed")}
-              >
-                Move to {category.type === "fixed" ? "Variable" : "Fixed"}
-              </button>
-            )}
-            {onDelete && (
-              <button
-                type="button"
-                className="category-card__delete-btn"
-                onClick={handleDeleteClick}
-                aria-label={`Delete ${category.label}`}
-              >
-                ×
-              </button>
-            )}
-          </>
-        )}
+        {showMenu && <CardMenu items={menuItems} label={`${category.label} actions`} />}
       </div>
 
       {showBlockedNotice && (
         <div className="category-card__confirm">
           <span>
-            Can't delete — {transactionCount} transaction{transactionCount === 1 ? "" : "s"} use{transactionCount === 1 ? "s" : ""}{" "}
-            "{category.label}". Move or delete {transactionCount === 1 ? "it" : "them"} first.
+            Can't delete — {transactionCount} transaction{transactionCount === 1 ? "" : "s"}{" "}
+            use{transactionCount === 1 ? "s" : ""} "{category.label}". Move or delete{" "}
+            {transactionCount === 1 ? "it" : "them"} first.
           </span>
           <button type="button" className="category-card__cancel-btn" onClick={() => setShowBlockedNotice(false)}>
             Okay

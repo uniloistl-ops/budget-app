@@ -73,7 +73,7 @@
   font-weight: 600;
   color: var(--text-primary);
   background: var(--color-surface-sunken);
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   padding: var(--space-2) var(--space-3);
 }
@@ -111,16 +111,17 @@
   align-items: center;
   gap: 2px;
   background: var(--color-surface-sunken);
-  border: 2px solid transparent;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   padding: var(--space-2);
   cursor: pointer;
   color: var(--text-secondary);
-  transition: border-color var(--transition-fast) var(--transition-fn), color var(--transition-fast) var(--transition-fn);
+  transition: border-color var(--transition-fast) var(--transition-fn), background var(--transition-fast) var(--transition-fn), color var(--transition-fast) var(--transition-fn);
 }
 
 .paycheck__tax-class strong {
-  font-size: 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -130,6 +131,7 @@
 }
 
 .paycheck__tax-class--active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--color-surface));
   border-color: var(--accent);
 }
 

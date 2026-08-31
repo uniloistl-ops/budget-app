@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { CardMenu } from "../components/CardMenu";
 import { CategoryCard } from "../components/CategoryCard";
 import { MonthNav } from "../components/MonthNav";
 import { ProgressBar } from "../components/ProgressBar";
@@ -189,24 +190,19 @@ function DebtCard({ debt }: { debt: Debt }) {
             <span className="debt-card__amounts">
               €{paidOff.toFixed(0)} paid of €{debt.totalAmount.toFixed(0)}
             </span>
-            <button
-              type="button"
-              className="debt-card__edit-btn"
-              onClick={() => {
-                setDraft(String(debt.remainingAmount));
-                setEditing(true);
-              }}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              className="debt-card__delete-btn"
-              onClick={() => setConfirmingDelete(true)}
-              aria-label={`Delete ${debt.label}`}
-            >
-              ×
-            </button>
+            <CardMenu
+              label={`${debt.label} actions`}
+              items={[
+                {
+                  label: "Edit",
+                  onClick: () => {
+                    setDraft(String(debt.remainingAmount));
+                    setEditing(true);
+                  },
+                },
+                { label: "Delete", onClick: () => setConfirmingDelete(true), destructive: true },
+              ]}
+            />
           </div>
         )}
         {confirmingDelete && (

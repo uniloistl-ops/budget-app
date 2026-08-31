@@ -22,16 +22,18 @@
 
 .settings-page__option {
   background: var(--color-surface-sunken);
-  border: 2px solid transparent;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   padding: var(--space-2) var(--space-3);
   color: var(--text-secondary);
   font-weight: 600;
+  font-size: 0.92rem;
   cursor: pointer;
-  transition: border-color var(--transition-fast) var(--transition-fn), color var(--transition-fast) var(--transition-fn);
+  transition: border-color var(--transition-fast) var(--transition-fn), background var(--transition-fast) var(--transition-fn), color var(--transition-fast) var(--transition-fn);
 }
 
 .settings-page__option--active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--color-surface));
   border-color: var(--accent);
   color: var(--text-primary);
 }

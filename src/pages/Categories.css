@@ -93,7 +93,7 @@
   font-weight: 600;
   color: var(--text-primary);
   background: var(--color-surface-sunken);
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   padding: var(--space-2) var(--space-3);
 }
@@ -107,7 +107,7 @@
   align-items: center;
   gap: 6px;
   background: var(--color-surface-sunken);
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   padding: 0 var(--space-3);
 }
@@ -194,34 +194,6 @@
   color: var(--text-secondary);
   font-size: 0.85rem;
   white-space: nowrap;
-}
-
-.debt-card__edit-btn {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-weight: 600;
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 2px 4px;
-}
-
-.debt-card__delete-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.debt-card__delete-btn:hover {
-  background: var(--status-critical-bg);
-  color: var(--status-critical);
 }
 
 .debt-card__confirm {
