@@ -52,7 +52,7 @@ function euro(n: number): string {
 
 export function Paycheck() {
   const [inputs, setInputs] = usePersistentState<PaycheckInputs>("calm-budget:paycheck", DEFAULT_INPUTS);
-  const { selectedMonth, incomeForSelectedMonth, setIncomeForSelectedMonth } = useBudgetData();
+  const { selectedMonth, paycheckIncomeForSelectedMonth, setIncomeForSelectedMonth } = useBudgetData();
   const monthLabel = formatMonthLabel(selectedMonth);
 
   function set<K extends keyof PaycheckInputs>(key: K, value: PaycheckInputs[K]) {
@@ -63,7 +63,7 @@ export function Paycheck() {
   const grossForBar = Math.max(result.grossMonthly, 0.01);
   const netPct = Math.max(0, Math.min(100, (result.netMonthly / grossForBar) * 100));
   const alreadyApplied =
-    incomeForSelectedMonth !== undefined && Math.abs(incomeForSelectedMonth - result.netMonthly) < 0.01;
+    paycheckIncomeForSelectedMonth !== undefined && Math.abs(paycheckIncomeForSelectedMonth - result.netMonthly) < 0.01;
 
   const isMinijob = inputs.employmentType === "minijob";
   const isStudent = inputs.employmentType === "student";

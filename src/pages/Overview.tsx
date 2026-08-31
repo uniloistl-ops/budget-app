@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { BudgetPieChart, type PieSlice } from "../components/BudgetPieChart";
+import { CardMenu } from "../components/CardMenu";
 import { CategoryCard } from "../components/CategoryCard";
 import { MonthNav } from "../components/MonthNav";
 import { TransactionRow } from "../components/TransactionRow";
@@ -8,15 +9,154 @@ import { mockUpcoming } from "../data/mockData";
 import { useBudgetData } from "../context/BudgetDataContext";
 import { useSettings } from "../context/SettingsContext";
 import { daysLeftInMonth, daysUntil, formatMonthLabel, getNextPayday } from "../lib/dates";
+import type { IncomeSource } from "../types";
 import "./Overview.css";
 
 type ChartView = "category" | "type";
 
+function AddIncomeSourceForm({ onClose }: { onClose: () => void }) {
+  const { addIncomeSource } = useBudgetData();
+  const [label, setLabel] = useState("");
+  const [amount, setAmount] = useState("");
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    const value = Number(amount);
+    if (!label.trim() || !Number.isFinite(value) || value <= 0) return;
+    addIncomeSource({ label: label.trim(), amount: value });
+    onClose();
+  }
+
+  return (
+    <form className="card overview__income-add-form" onSubmit={submit}>
+      <div className="overview__income-add-grid">
+        <label className="overview__income-add-field">
+          <span>Source</span>
+          <input
+            type="text"
+            placeholder="e.g. Freelance, gift, refund"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            autoFocus
+          />
+        </label>
+        <label className="overview__income-add-field">
+          <span>Amount</span>
+          <div className="overview__income-add-euro">
+            <span>€</span>
+            <input type="number" min={0.01} step={0.01} value={amount} onChange={(e) => setAmount(e.target.value)} />
+          </div>
+        </label>
+      </div>
+      <div className="overview__income-add-actions">
+        <button type="submit" className="overview__income-add-submit">
+          Add
+        </button>
+        <button type="button" className="overview__income-add-cancel" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function IncomeSourceRow({ source }: { source: IncomeSource }) {
+  const { updateIncomeSource, deleteIncomeSource } = useBudgetData();
+  const [editing, setEditing] = useState(false);
+  const [draftLabel, setDraftLabel] = useState(source.label);
+  const [draftAmount, setDraftAmount] = useState(String(source.amount));
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  function save() {
+    const value = Number(draftAmount);
+    if (!draftLabel.trim() || !Number.isFinite(value) || value <= 0) return;
+    updateIncomeSource(source.id, { label: draftLabel.trim(), amount: value });
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <div className="overview__income-row overview__income-row--editing">
+        <input
+          type="text"
+          className="overview__income-row-text"
+          value={draftLabel}
+          autoFocus
+          onChange={(e) => setDraftLabel(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") setEditing(false);
+          }}
+        />
+        <div className="overview__income-row-euro">
+          <span>€</span>
+          <input
+            type="number"
+            min={0.01}
+            step={0.01}
+            value={draftAmount}
+            onChange={(e) => setDraftAmount(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") save();
+              if (e.key === "Escape") setEditing(false);
+            }}
+          />
+        </div>
+        <div className="overview__income-row-actions">
+          <button type="button" className="overview__income-row-save" onClick={save}>
+            Save
+          </button>
+          <button type="button" className="overview__income-row-cancel" onClick={() => setEditing(false)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overview__income-row">
+      <span className="overview__income-row-label">{source.label}</span>
+      {confirmingDelete ? (
+        <div className="overview__income-row-confirm">
+          <span>Delete?</span>
+          <button type="button" className="overview__income-row-confirm-yes" onClick={() => deleteIncomeSource(source.id)}>
+            Yes
+          </button>
+          <button type="button" className="overview__income-row-confirm-no" onClick={() => setConfirmingDelete(false)}>
+            No
+          </button>
+        </div>
+      ) : (
+        <>
+          <span className="overview__income-row-amount">€{source.amount.toFixed(2)}</span>
+          <CardMenu
+            label={`${source.label} actions`}
+            items={[
+              { label: "Edit", onClick: () => setEditing(true) },
+              { label: "Delete", onClick: () => setConfirmingDelete(true), destructive: true },
+            ]}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
 export function Overview() {
-  const { categories, categoriesWithSpent, transactionsForSelectedMonth, selectedMonth, isCurrentMonth, incomeForSelectedMonth, debts } =
-    useBudgetData();
+  const {
+    categories,
+    categoriesWithSpent,
+    transactionsForSelectedMonth,
+    selectedMonth,
+    isCurrentMonth,
+    incomeSourcesForSelectedMonth,
+    incomeForSelectedMonth,
+    debts,
+  } = useBudgetData();
   const { settings } = useSettings();
   const [chartView, setChartView] = useState<ChartView>("category");
+  const [showAddIncomeForm, setShowAddIncomeForm] = useState(false);
   const totalSpent = categoriesWithSpent.reduce((sum, c) => sum + c.spent, 0);
   const totalLimit = categoriesWithSpent.reduce((sum, c) => sum + c.limit, 0);
   const fixedCategories = categoriesWithSpent.filter((c) => c.type === "fixed");
@@ -40,11 +180,12 @@ export function Overview() {
             colorVar: "--group-variable",
           },
         ];
-  // Once income has been applied for this month (from the Paycheck tab),
-  // "money left" is income minus spending — the number people actually
-  // want. Before that, fall back to the category-limits total.
+  // Once income has been added for this month (paycheck and/or other
+  // sources), "money left" is income minus spending — the number people
+  // actually want. Before that, fall back to the category-limits total.
   const hasIncome = incomeForSelectedMonth !== undefined;
   const totalLeft = hasIncome ? incomeForSelectedMonth - totalSpent : totalLimit - totalSpent;
+  const spendingLessThanEarning = hasIncome ? totalSpent <= incomeForSelectedMonth : null;
 
   // When a payday is configured, the budgeting cycle runs payday-to-payday
   // rather than calendar-month-to-month — so "days remaining" counts down
@@ -54,7 +195,7 @@ export function Overview() {
   const daysUntilPayday = nextPayday ? daysUntil(nextPayday) : null;
   const usingPayday = isCurrentMonth && daysUntilPayday !== null;
   const days = usingPayday ? daysUntilPayday : daysLeftInMonth();
-  const dailyAllowance = usingPayday && days > 0 && totalLeft > 0 ? totalLeft / days : null;
+  const dailyAllowance = isCurrentMonth && days > 0 && totalLeft > 0 ? totalLeft / days : null;
 
   const recentTransactions = [...transactionsForSelectedMonth].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 4);
   const monthLabel = formatMonthLabel(selectedMonth);
@@ -106,18 +247,7 @@ export function Overview() {
           <p className="overview__sentence">{renderSentence()}</p>
           {dailyAllowance !== null && (
             <p className="overview__daily-line">
-              That's about <strong>€{dailyAllowance.toFixed(0)}</strong> a day until payday.
-            </p>
-          )}
-          {hasIncome && (
-            <p className="overview__income-line">
-              Income for {monthLabel}: <strong>€{incomeForSelectedMonth.toFixed(0)}</strong>
-            </p>
-          )}
-          {!hasIncome && (
-            <p className="overview__income-hint">
-              No income set for {monthLabel} yet — <Link to="/paycheck">calculate and apply it</Link> to see your
-              real money left.
+              That's about <strong>€{dailyAllowance.toFixed(0)}</strong> a day {usingPayday ? "until payday" : "for the rest of the month"}.
             </p>
           )}
         </div>
@@ -125,6 +255,61 @@ export function Overview() {
           + Log a transaction
         </Link>
       </header>
+
+      <section className="card overview__income-card">
+        <div className="overview__income-header">
+          <div>
+            <h2>Income</h2>
+            <p className="overview__hint">Where your money comes from this month — your paycheck, plus anything else.</p>
+          </div>
+          {!showAddIncomeForm && (
+            <button type="button" className="overview__income-add-link" onClick={() => setShowAddIncomeForm(true)}>
+              + Add income
+            </button>
+          )}
+        </div>
+
+        {showAddIncomeForm && <AddIncomeSourceForm onClose={() => setShowAddIncomeForm(false)} />}
+
+        {incomeSourcesForSelectedMonth.length > 0 ? (
+          <div className="overview__income-list">
+            {incomeSourcesForSelectedMonth.map((s) => (
+              <IncomeSourceRow key={s.id} source={s} />
+            ))}
+          </div>
+        ) : (
+          !showAddIncomeForm && (
+            <p className="overview__hint">
+              No income added yet — <Link to="/paycheck">calculate your paycheck</Link> or add another source above.
+            </p>
+          )
+        )}
+
+        {hasIncome && (
+          <>
+            <div className="overview__income-total">
+              <span>Total income</span>
+              <strong>€{incomeForSelectedMonth.toFixed(0)}</strong>
+            </div>
+            <div className="overview__income-vs-spend-bar">
+              <div
+                className="overview__income-vs-spend-fill"
+                style={{
+                  width: `${Math.min(100, (totalSpent / incomeForSelectedMonth) * 100)}%`,
+                  background: spendingLessThanEarning ? "var(--status-good)" : "var(--status-critical)",
+                }}
+              />
+            </div>
+            <p className="overview__income-vs-spend-sentence">
+              {spendingLessThanEarning ? (
+                <>You're spending <strong className="overview__good-text">less</strong> than you earn this month.</>
+              ) : (
+                <>You're spending <strong className="overview__critical-text">more</strong> than you earn this month.</>
+              )}
+            </p>
+          </>
+        )}
+      </section>
 
       <section className="card overview__chart-card">
         <div className="overview__chart-toolbar">

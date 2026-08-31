@@ -2,7 +2,11 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 import { nextColorVar } from "../config/categories";
 import { usePersistentState } from "../lib/usePersistentState";
 import { currentMonthKey, shiftMonthKey } from "../lib/dates";
-import type { Category, CategoryId, CategoryType, CategoryWithSpent, Debt, Goal, Transaction } from "../types";
+import type { Category, CategoryId, CategoryType, CategoryWithSpent, Debt, Goal, IncomeSource, Transaction } from "../types";
+
+/** The id "Apply" on the Paycheck tab writes to, so re-applying updates
+ * the same entry instead of piling up duplicates. */
+const PAYCHECK_SOURCE_ID = "paycheck";
 
 // A starter set so the app isn't empty on first run — rename, delete, or
 // add to these freely from the Categories page.
@@ -39,8 +43,9 @@ interface BudgetData {
   transactions: Transaction[];
   goals: Goal[];
   debts: Debt[];
-  /** Month key ("2026-08") -> monthly income, set manually or "Apply"'d from Paycheck. */
-  incomeByMonth: Record<string, number>;
+  /** Month key ("2026-08") -> that month's income sources (paycheck, side
+   * gigs, gifts, refunds, ...) — the month's total is their sum. */
+  incomeSourcesByMonth: Record<string, IncomeSource[]>;
 }
 
 function makeId(): string {
@@ -63,8 +68,18 @@ interface BudgetDataContextValue {
   goToNextMonth: () => void;
   goToCurrentMonth: () => void;
 
+  /** Every income source for the viewed month (including the "Paycheck" one, if applied). */
+  incomeSourcesForSelectedMonth: IncomeSource[];
+  /** Sum of all sources — undefined if none have been added yet. */
   incomeForSelectedMonth: number | undefined;
+  /** Just the "Paycheck" source's amount — used by the Paycheck tab's own
+   * "already applied" check, so it isn't thrown off by other income you've added. */
+  paycheckIncomeForSelectedMonth: number | undefined;
+  /** Upserts the one "Paycheck" source — what the Paycheck tab's Apply button calls. */
   setIncomeForSelectedMonth: (amount: number) => void;
+  addIncomeSource: (input: { label: string; amount: number }) => void;
+  updateIncomeSource: (id: string, patch: Partial<Pick<IncomeSource, "label" | "amount">>) => void;
+  deleteIncomeSource: (id: string) => void;
 
   addCategory: (input: { label: string; type: CategoryType; limit: number }) => void;
   /** Edit any part of a category — name, limit, type, or color. */
@@ -89,12 +104,27 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
     transactions: DEFAULT_TRANSACTIONS,
     goals: DEFAULT_GOALS,
     debts: DEFAULT_DEBTS,
-    incomeByMonth: {},
+    incomeSourcesByMonth: {},
   });
 
   // Which month is being viewed — always opens on the real current month,
   // like a calendar app, rather than remembering where you last left off.
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey());
+
+  // Before multiple income sources existed, each month stored a single
+  // number. Fold any of those into the new shape as a "Paycheck" entry,
+  // rather than losing them.
+  const incomeSourcesByMonth = useMemo(() => {
+    const legacy = (data as unknown as { incomeByMonth?: Record<string, number> }).incomeByMonth;
+    if (!legacy) return data.incomeSourcesByMonth;
+    const merged = { ...data.incomeSourcesByMonth };
+    for (const [month, amount] of Object.entries(legacy)) {
+      if (!merged[month] && typeof amount === "number") {
+        merged[month] = [{ id: PAYCHECK_SOURCE_ID, label: "Paycheck", amount }];
+      }
+    }
+    return merged;
+  }, [data]);
 
   // Categories saved before "type" existed won't have one — default those
   // to "variable" rather than letting them silently vanish from both the
@@ -131,9 +161,53 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
     goToNextMonth: () => setSelectedMonth((m) => shiftMonthKey(m, 1)),
     goToCurrentMonth: () => setSelectedMonth(currentMonthKey()),
 
-    incomeForSelectedMonth: data.incomeByMonth[selectedMonth],
+    incomeSourcesForSelectedMonth: incomeSourcesByMonth[selectedMonth] ?? [],
+    incomeForSelectedMonth: incomeSourcesByMonth[selectedMonth]?.length
+      ? incomeSourcesByMonth[selectedMonth].reduce((sum, s) => sum + s.amount, 0)
+      : undefined,
+    paycheckIncomeForSelectedMonth: incomeSourcesByMonth[selectedMonth]?.find((s) => s.id === PAYCHECK_SOURCE_ID)
+      ?.amount,
+
     setIncomeForSelectedMonth(amount) {
-      setData({ ...data, incomeByMonth: { ...data.incomeByMonth, [selectedMonth]: amount } });
+      const existing = incomeSourcesByMonth[selectedMonth] ?? [];
+      const rest = existing.filter((s) => s.id !== PAYCHECK_SOURCE_ID);
+      setData({
+        ...data,
+        incomeSourcesByMonth: {
+          ...incomeSourcesByMonth,
+          [selectedMonth]: [{ id: PAYCHECK_SOURCE_ID, label: "Paycheck", amount }, ...rest],
+        },
+      });
+    },
+
+    addIncomeSource({ label, amount }) {
+      const existing = incomeSourcesByMonth[selectedMonth] ?? [];
+      setData({
+        ...data,
+        incomeSourcesByMonth: {
+          ...incomeSourcesByMonth,
+          [selectedMonth]: [...existing, { id: makeId(), label, amount }],
+        },
+      });
+    },
+
+    updateIncomeSource(id, patch) {
+      const existing = incomeSourcesByMonth[selectedMonth] ?? [];
+      setData({
+        ...data,
+        incomeSourcesByMonth: {
+          ...incomeSourcesByMonth,
+          [selectedMonth]: existing.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+        },
+      });
+    },
+
+    deleteIncomeSource(id) {
+      const existing = incomeSourcesByMonth[selectedMonth] ?? [];
+      setData({
+        ...data,
+        incomeSourcesByMonth: { ...incomeSourcesByMonth, [selectedMonth]: existing.filter((s) => s.id !== id) },
+      });
     },
 
     addCategory({ label, type, limit }) {
