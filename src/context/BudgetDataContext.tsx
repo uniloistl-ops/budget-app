@@ -8,35 +8,24 @@ import type { Category, CategoryId, CategoryType, CategoryWithSpent, Debt, Goal,
  * the same entry instead of piling up duplicates. */
 const PAYCHECK_SOURCE_ID = "paycheck";
 
-// A starter set so the app isn't empty on first run — rename, delete, or
-// add to these freely from the Categories page.
+// A starter set of category names so the app isn't a blank wall on first
+// run — but no fake limits or history. Rename, delete, or add to these
+// freely from the Categories page; every amount starts at zero, waiting
+// for your real numbers.
 const DEFAULT_CATEGORIES: Category[] = [
-  { id: "rent", label: "Rent", colorVar: "--cat-rent", description: "Where you live", limit: 900, type: "fixed" },
-  { id: "groceries", label: "Groceries", colorVar: "--cat-groceries", description: "Food & household", limit: 350, type: "variable" },
-  { id: "transport", label: "Transport", colorVar: "--cat-transport", description: "Getting around", limit: 90, type: "variable" },
-  { id: "subscriptions", label: "Subscriptions", colorVar: "--cat-subscriptions", description: "Regular services", limit: 60, type: "fixed" },
-  { id: "savings", label: "Savings", colorVar: "--cat-savings", description: "Future you", limit: 300, type: "fixed" },
-  { id: "fun", label: "Fun money", colorVar: "--cat-fun", description: "No guilt spending", limit: 150, type: "variable" },
+  { id: "rent", label: "Rent", colorVar: "--cat-rent", description: "Where you live", limit: 0, type: "fixed" },
+  { id: "groceries", label: "Groceries", colorVar: "--cat-groceries", description: "Food & household", limit: 0, type: "variable" },
+  { id: "transport", label: "Transport", colorVar: "--cat-transport", description: "Getting around", limit: 0, type: "variable" },
+  { id: "subscriptions", label: "Subscriptions", colorVar: "--cat-subscriptions", description: "Regular services", limit: 0, type: "fixed" },
+  { id: "savings", label: "Savings", colorVar: "--cat-savings", description: "Future you", limit: 0, type: "fixed" },
+  { id: "fun", label: "Fun money", colorVar: "--cat-fun", description: "No guilt spending", limit: 0, type: "variable" },
 ];
 
-// Seeded with a few example transactions so the app isn't empty on first
-// run — delete them and add your own whenever you like.
-const DEFAULT_TRANSACTIONS: Transaction[] = [
-  { id: "t1", categoryId: "groceries", description: "Migros", amount: 42.3, date: "2026-08-29" },
-  { id: "t2", categoryId: "fun", description: "Cinema", amount: 18, date: "2026-08-28" },
-  { id: "t3", categoryId: "transport", description: "SBB day pass", amount: 12.5, date: "2026-08-27" },
-  { id: "t4", categoryId: "subscriptions", description: "Spotify", amount: 12.95, date: "2026-08-25" },
-  { id: "t5", categoryId: "groceries", description: "Coop", amount: 31.1, date: "2026-08-24" },
-  { id: "t6", categoryId: "fun", description: "Board game", amount: 24, date: "2026-08-22" },
-  { id: "t7", categoryId: "rent", description: "August rent", amount: 900, date: "2026-08-01" },
-];
+const DEFAULT_TRANSACTIONS: Transaction[] = [];
 
-const DEFAULT_GOALS: Goal[] = [
-  { id: "g1", label: "Emergency fund", targetAmount: 3000, savedAmount: 1450 },
-  { id: "g2", label: "Trip to Portugal", targetAmount: 800, savedAmount: 300 },
-];
+const DEFAULT_GOALS: Goal[] = [];
 
-const DEFAULT_DEBTS: Debt[] = [{ id: "d1", label: "Car loan", totalAmount: 8000, remainingAmount: 5200, monthlyPayment: 180 }];
+const DEFAULT_DEBTS: Debt[] = [];
 
 interface BudgetData {
   categories: Category[];

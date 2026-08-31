@@ -90,3 +90,53 @@
 .settings-page__payday-preview strong {
   color: var(--text-primary);
 }
+
+.settings-page__reset-btn {
+  margin-top: var(--space-2);
+  background: none;
+  border: 1px solid var(--status-critical);
+  color: var(--status-critical);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.settings-page__reset-btn:hover {
+  background: var(--status-critical-bg);
+}
+
+.settings-page__reset-confirm {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.settings-page__reset-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.settings-page__reset-confirm-btn,
+.settings-page__reset-cancel-btn {
+  border: none;
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.settings-page__reset-confirm-btn {
+  background: var(--status-critical);
+  color: #fff;
+}
+
+.settings-page__reset-cancel-btn {
+  background: var(--color-surface-sunken);
+  color: var(--text-secondary);
+}

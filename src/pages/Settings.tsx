@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSettings, type DetailLevel, type ThemeMode } from "../context/SettingsContext";
 import { daysUntil, getNextPayday } from "../lib/dates";
 import type { PaydaySettings } from "../types";
@@ -30,6 +31,13 @@ function paydayMode(payday: PaydaySettings | null): PaydayMode {
 export function Settings() {
   const { settings, update } = useSettings();
   const mode = paydayMode(settings.payday);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
+  function resetAllData() {
+    localStorage.removeItem("calm-budget:data");
+    localStorage.removeItem("calm-budget:paycheck");
+    window.location.reload();
+  }
 
   function setMode(next: PaydayMode) {
     if (next === "none") update("payday", null);
@@ -187,6 +195,31 @@ export function Settings() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="card settings-page__section">
+        <h2>Data</h2>
+        <p className="settings-page__hint">
+          Everything you enter lives only in this browser — categories, transactions, goals, debts, income, and your
+          Paycheck numbers.
+        </p>
+        {confirmingReset ? (
+          <div className="settings-page__reset-confirm">
+            <span>This clears everything and starts fresh. It can't be undone.</span>
+            <div className="settings-page__reset-actions">
+              <button type="button" className="settings-page__reset-confirm-btn" onClick={resetAllData}>
+                Yes, reset everything
+              </button>
+              <button type="button" className="settings-page__reset-cancel-btn" onClick={() => setConfirmingReset(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="settings-page__reset-btn" onClick={() => setConfirmingReset(true)}>
+            Reset all data
+          </button>
+        )}
       </section>
     </div>
   );

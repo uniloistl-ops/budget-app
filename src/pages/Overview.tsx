@@ -370,14 +370,18 @@ export function Overview() {
         <section className="card">
           <h2>Coming up</h2>
           <p className="overview__hint">Recurring expenses expected soon, so nothing catches you off guard.</p>
-          <ul className="overview__upcoming-list">
-            {mockUpcoming.map((u) => (
-              <li key={u.id} className="overview__upcoming-item">
-                <span>{u.label}</span>
-                <span className="overview__upcoming-amount">€{u.amount.toFixed(2)}</span>
-              </li>
-            ))}
-          </ul>
+          {mockUpcoming.length > 0 ? (
+            <ul className="overview__upcoming-list">
+              {mockUpcoming.map((u) => (
+                <li key={u.id} className="overview__upcoming-item">
+                  <span>{u.label}</span>
+                  <span className="overview__upcoming-amount">€{u.amount.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="overview__hint">Nothing set up here yet.</p>
+          )}
         </section>
 
         <section className="card">

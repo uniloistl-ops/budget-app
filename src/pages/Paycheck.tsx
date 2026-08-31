@@ -16,9 +16,9 @@ import "./Paycheck.css";
 const DEFAULT_INPUTS: PaycheckInputs = {
   employmentType: "regular",
   payMode: "monthly",
-  hourlyRate: 20,
-  hoursPerWeek: 38,
-  monthlyGross: 3500,
+  hourlyRate: 0,
+  hoursPerWeek: 0,
+  monthlyGross: 0,
   taxClass: "I",
   stateId: "BE",
   churchTax: false,
@@ -26,7 +26,7 @@ const DEFAULT_INPUTS: PaycheckInputs = {
   under23Childless: false,
   insuranceType: "statutory",
   zusatzbeitrag: 2.9,
-  privateMonthlyPremium: 450,
+  privateMonthlyPremium: 0,
   minijobRvExempt: true,
 };
 
