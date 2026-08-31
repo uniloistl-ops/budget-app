@@ -31,6 +31,8 @@ const COLOR_VAR_HEX: Record<"light" | "dark", Record<string, string>> = {
     "--cat-fun": "#493c8a",
     "--cat-extra-1": "#3c7a49",
     "--cat-extra-2": "#ab453f",
+    "--group-fixed": "#4a5b73",
+    "--group-variable": "#8a6f4e",
   },
   dark: {
     "--cat-rent": "#6c93c4",
@@ -41,6 +43,8 @@ const COLOR_VAR_HEX: Record<"light" | "dark", Record<string, string>> = {
     "--cat-fun": "#8478c9",
     "--cat-extra-1": "#5a9a67",
     "--cat-extra-2": "#c07370",
+    "--group-fixed": "#7f93ad",
+    "--group-variable": "#b99b74",
   },
 };
 

@@ -1,15 +1,21 @@
 import { useState } from "react";
 import type { CategoryType, CategoryWithSpent } from "../types";
-import { getCategoryColor } from "../config/categories";
+import { COLOR_VAR_POOL, getCategoryColor } from "../config/categories";
 import { useSettings } from "../context/SettingsContext";
 import { CardMenu, type CardMenuItem } from "./CardMenu";
 import { ProgressBar } from "./ProgressBar";
 import "./CategoryCard.css";
 
+interface CategoryEditPatch {
+  label: string;
+  limit: number;
+  colorVar: string;
+}
+
 interface CategoryCardProps {
   category: CategoryWithSpent;
-  /** When provided, shows an "Edit" affordance for the monthly limit. */
-  onEditLimit?: (newLimit: number) => void;
+  /** When provided, shows an "Edit" affordance for name, limit and color. */
+  onEdit?: (patch: CategoryEditPatch) => void;
   /** When provided, offers "Move to Fixed/Variable" from the menu. */
   onChangeType?: (newType: CategoryType) => void;
   /** When provided, offers delete from the menu, with a lightweight confirm step. */
@@ -20,18 +26,22 @@ interface CategoryCardProps {
   transactionCount?: number;
 }
 
-export function CategoryCard({ category, onEditLimit, onChangeType, onDelete, transactionCount = 0 }: CategoryCardProps) {
+export function CategoryCard({ category, onEdit, onChangeType, onDelete, transactionCount = 0 }: CategoryCardProps) {
   const { settings } = useSettings();
   const color = getCategoryColor(category.colorVar);
   const remaining = category.limit - category.spent;
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(String(category.limit));
+  const [draftLabel, setDraftLabel] = useState(category.label);
+  const [draftLimit, setDraftLimit] = useState(String(category.limit));
+  const [draftColorVar, setDraftColorVar] = useState(category.colorVar);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [showBlockedNotice, setShowBlockedNotice] = useState(false);
   const isBlocked = transactionCount > 0;
 
   function startEditing() {
-    setDraft(String(category.limit));
+    setDraftLabel(category.label);
+    setDraftLimit(String(category.limit));
+    setDraftColorVar(category.colorVar);
     setEditing(true);
   }
 
@@ -44,15 +54,14 @@ export function CategoryCard({ category, onEditLimit, onChangeType, onDelete, tr
   }
 
   function save() {
-    const value = Number(draft);
-    if (Number.isFinite(value) && value >= 0) {
-      onEditLimit?.(value);
-    }
+    const limit = Number(draftLimit);
+    if (!draftLabel.trim() || !Number.isFinite(limit) || limit < 0) return;
+    onEdit?.({ label: draftLabel.trim(), limit, colorVar: draftColorVar });
     setEditing(false);
   }
 
   const menuItems: CardMenuItem[] = [];
-  if (onEditLimit) menuItems.push({ label: "Edit limit", onClick: startEditing });
+  if (onEdit) menuItems.push({ label: "Edit", onClick: startEditing });
   if (onChangeType) {
     menuItems.push({
       label: `Move to ${category.type === "fixed" ? "Variable" : "Fixed"}`,
@@ -100,21 +109,50 @@ export function CategoryCard({ category, onEditLimit, onChangeType, onDelete, tr
 
       {!confirmingDelete && editing && (
         <div className="category-card__edit-row">
+          <span>Name</span>
+          <input
+            type="text"
+            className="category-card__edit-text"
+            autoFocus
+            value={draftLabel}
+            onChange={(e) => setDraftLabel(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") save();
+              if (e.key === "Escape") setEditing(false);
+            }}
+          />
+
           <span>Monthly limit</span>
           <div className="category-card__edit-input">
             <span>€</span>
             <input
               type="number"
               min={0}
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              value={draftLimit}
+              onChange={(e) => setDraftLimit(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") save();
                 if (e.key === "Escape") setEditing(false);
               }}
             />
           </div>
+
+          <span>Color</span>
+          <div className="category-card__swatches" role="radiogroup" aria-label="Category color">
+            {COLOR_VAR_POOL.map((cv) => (
+              <button
+                key={cv}
+                type="button"
+                role="radio"
+                aria-checked={draftColorVar === cv}
+                aria-label={cv.replace("--cat-", "").replace("-", " ")}
+                className={"category-card__swatch" + (draftColorVar === cv ? " category-card__swatch--active" : "")}
+                style={{ background: getCategoryColor(cv) }}
+                onClick={() => setDraftColorVar(cv)}
+              />
+            ))}
+          </div>
+
           <div className="category-card__edit-actions">
             <button type="button" className="category-card__save-btn" onClick={save}>
               Save

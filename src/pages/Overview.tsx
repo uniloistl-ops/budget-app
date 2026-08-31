@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BudgetPieChart } from "../components/BudgetPieChart";
+import { BudgetPieChart, type PieSlice } from "../components/BudgetPieChart";
 import { CategoryCard } from "../components/CategoryCard";
 import { MonthNav } from "../components/MonthNav";
 import { TransactionRow } from "../components/TransactionRow";
@@ -9,15 +10,36 @@ import { useSettings } from "../context/SettingsContext";
 import { daysLeftInMonth, daysUntil, formatMonthLabel, getNextPayday } from "../lib/dates";
 import "./Overview.css";
 
+type ChartView = "category" | "type";
+
 export function Overview() {
   const { categories, categoriesWithSpent, transactionsForSelectedMonth, selectedMonth, isCurrentMonth, incomeForSelectedMonth, debts } =
     useBudgetData();
   const { settings } = useSettings();
+  const [chartView, setChartView] = useState<ChartView>("category");
   const totalSpent = categoriesWithSpent.reduce((sum, c) => sum + c.spent, 0);
   const totalLimit = categoriesWithSpent.reduce((sum, c) => sum + c.limit, 0);
   const fixedCategories = categoriesWithSpent.filter((c) => c.type === "fixed");
   const variableCategories = categoriesWithSpent.filter((c) => c.type === "variable");
   const totalDebt = debts.reduce((sum, d) => sum + d.remainingAmount, 0);
+
+  const chartSlices: PieSlice[] =
+    chartView === "category"
+      ? categoriesWithSpent
+      : [
+          {
+            id: "fixed",
+            label: "Fixed costs",
+            spent: fixedCategories.reduce((sum, c) => sum + c.spent, 0),
+            colorVar: "--group-fixed",
+          },
+          {
+            id: "variable",
+            label: "Variable costs",
+            spent: variableCategories.reduce((sum, c) => sum + c.spent, 0),
+            colorVar: "--group-variable",
+          },
+        ];
   // Once income has been applied for this month (from the Paycheck tab),
   // "money left" is income minus spending — the number people actually
   // want. Before that, fall back to the category-limits total.
@@ -105,12 +127,36 @@ export function Overview() {
       </header>
 
       <section className="card overview__chart-card">
-        {usingPayday && (
-          <div className="overview__payday-badge">
-            {daysUntilPayday === 0 ? "Payday today" : `Payday in ${daysUntilPayday} day${daysUntilPayday === 1 ? "" : "s"}`}
+        <div className="overview__chart-toolbar">
+          {usingPayday ? (
+            <div className="overview__payday-badge">
+              {daysUntilPayday === 0 ? "Payday today" : `Payday in ${daysUntilPayday} day${daysUntilPayday === 1 ? "" : "s"}`}
+            </div>
+          ) : (
+            <span />
+          )}
+          <div className="overview__chart-toggle" role="radiogroup" aria-label="Chart grouping">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={chartView === "category"}
+              className={"overview__chart-toggle-btn" + (chartView === "category" ? " overview__chart-toggle-btn--active" : "")}
+              onClick={() => setChartView("category")}
+            >
+              By category
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={chartView === "type"}
+              className={"overview__chart-toggle-btn" + (chartView === "type" ? " overview__chart-toggle-btn--active" : "")}
+              onClick={() => setChartView("type")}
+            >
+              Fixed vs. variable
+            </button>
           </div>
-        )}
-        <BudgetPieChart categories={categoriesWithSpent} centerLabel="spent so far" centerValue={`€${totalSpent.toFixed(0)}`} />
+        </div>
+        <BudgetPieChart slices={chartSlices} centerLabel="spent so far" centerValue={`€${totalSpent.toFixed(0)}`} />
       </section>
 
       {fixedCategories.length > 0 && (

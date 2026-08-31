@@ -67,8 +67,8 @@ interface BudgetDataContextValue {
   setIncomeForSelectedMonth: (amount: number) => void;
 
   addCategory: (input: { label: string; type: CategoryType; limit: number }) => void;
-  updateCategoryLimit: (id: CategoryId, limit: number) => void;
-  updateCategoryType: (id: CategoryId, type: CategoryType) => void;
+  /** Edit any part of a category — name, limit, type, or color. */
+  updateCategory: (id: CategoryId, patch: Partial<Pick<Category, "label" | "limit" | "type" | "colorVar">>) => void;
   deleteCategory: (id: CategoryId) => void;
   addTransaction: (input: Omit<Transaction, "id">) => void;
   updateTransaction: (id: string, patch: Partial<Omit<Transaction, "id">>) => void;
@@ -148,15 +148,9 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
       setData({ ...data, categories: [...data.categories, category] });
     },
 
-    updateCategoryLimit(id, limit) {
-      setData({
-        ...data,
-        categories: data.categories.map((c) => (c.id === id ? { ...c, limit: Math.max(0, limit) } : c)),
-      });
-    },
-
-    updateCategoryType(id, type) {
-      setData({ ...data, categories: data.categories.map((c) => (c.id === id ? { ...c, type } : c)) });
+    updateCategory(id, patch) {
+      const clean = "limit" in patch ? { ...patch, limit: Math.max(0, patch.limit ?? 0) } : patch;
+      setData({ ...data, categories: data.categories.map((c) => (c.id === id ? { ...c, ...clean } : c)) });
     },
 
     deleteCategory(id) {

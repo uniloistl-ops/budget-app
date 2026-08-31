@@ -74,6 +74,43 @@
   outline: none;
 }
 
+.category-card__edit-text {
+  width: 100%;
+  background: var(--color-surface-sunken);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-control);
+  padding: 4px var(--space-2);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.category-card__edit-text:focus {
+  outline: none;
+}
+
+.category-card__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.category-card__swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.category-card__swatch--active {
+  border-color: var(--text-primary);
+  outline: 2px solid var(--color-surface);
+  outline-offset: -4px;
+}
+
 .category-card__edit-actions {
   display: flex;
   gap: var(--space-2);

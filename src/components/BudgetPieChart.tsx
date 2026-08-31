@@ -1,11 +1,19 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import type { CategoryId, CategoryWithSpent } from "../types";
 import { getCategoryHex } from "../config/categories";
 import { useSettings } from "../context/SettingsContext";
 import "./BudgetPieChart.css";
 
+/** Everything the chart actually needs for one slice — lets callers pass
+ * either real categories or a synthetic grouping (e.g. Fixed vs Variable). */
+export interface PieSlice {
+  id: string;
+  label: string;
+  spent: number;
+  colorVar: string;
+}
+
 interface BudgetPieChartProps {
-  categories: CategoryWithSpent[];
+  slices: PieSlice[];
   /** Big number shown in the donut's center. */
   centerLabel: string;
   centerValue: string;
@@ -28,17 +36,12 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Tooltip
   );
 }
 
-export function BudgetPieChart({ categories, centerLabel, centerValue }: BudgetPieChartProps) {
+export function BudgetPieChart({ slices, centerLabel, centerValue }: BudgetPieChartProps) {
   const { resolvedTheme, settings } = useSettings();
-  const data: { id: CategoryId; label: string; spent: number; value: number; colorVar: string }[] = categories.map(
-    (c) => ({
-      id: c.id,
-      label: c.label,
-      spent: c.spent,
-      colorVar: c.colorVar,
-      value: Math.max(c.spent, 0.01), // keep zero-spend slices from disappearing entirely
-    })
-  );
+  const data = slices.map((s) => ({
+    ...s,
+    value: Math.max(s.spent, 0.01), // keep zero-spend slices from disappearing entirely
+  }));
 
   // With more categories (especially once one dominates, like Rent), fixed
   // padding/rounding makes the thin remaining slices look like disconnected
@@ -79,15 +82,15 @@ export function BudgetPieChart({ categories, centerLabel, centerValue }: BudgetP
       </div>
 
       <ul className="budget-pie__legend">
-        {categories.map((c) => (
-          <li key={c.id} className="budget-pie__legend-item">
+        {slices.map((s) => (
+          <li key={s.id} className="budget-pie__legend-item">
             <span
               className="budget-pie__legend-dot"
-              style={{ background: getCategoryHex(c.colorVar, resolvedTheme) }}
+              style={{ background: getCategoryHex(s.colorVar, resolvedTheme) }}
               aria-hidden="true"
             />
-            <span className="budget-pie__legend-label">{c.label}</span>
-            <span className="budget-pie__legend-amount">€{c.spent.toFixed(0)}</span>
+            <span className="budget-pie__legend-label">{s.label}</span>
+            <span className="budget-pie__legend-amount">€{s.spent.toFixed(0)}</span>
           </li>
         ))}
       </ul>
