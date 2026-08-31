@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { PaydaySettings } from "../types";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type DetailLevel = "minimal" | "detailed";
@@ -8,6 +9,7 @@ export interface Settings {
   animations: boolean;
   fontScale: number; // 1 = default, 1.15 = large, 1.3 = extra large
   detailLevel: DetailLevel;
+  payday: PaydaySettings | null;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -15,6 +17,7 @@ const DEFAULT_SETTINGS: Settings = {
   animations: true,
   fontScale: 1,
   detailLevel: "minimal",
+  payday: null,
 };
 
 const STORAGE_KEY = "calm-budget:settings";

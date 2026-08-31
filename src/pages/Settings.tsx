@@ -1,4 +1,6 @@
 import { useSettings, type DetailLevel, type ThemeMode } from "../context/SettingsContext";
+import { daysUntil, getNextPayday } from "../lib/dates";
+import type { PaydaySettings } from "../types";
 import "./Settings.css";
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
@@ -18,8 +20,26 @@ const DETAIL_OPTIONS: { value: DetailLevel; label: string; description: string }
   { value: "detailed", label: "Detailed", description: "Show exact numbers everywhere." },
 ];
 
+type PaydayMode = "none" | "fixed" | "lastWeekday";
+
+function paydayMode(payday: PaydaySettings | null): PaydayMode {
+  if (!payday) return "none";
+  return payday.mode;
+}
+
 export function Settings() {
   const { settings, update } = useSettings();
+  const mode = paydayMode(settings.payday);
+
+  function setMode(next: PaydayMode) {
+    if (next === "none") update("payday", null);
+    else if (next === "fixed") update("payday", { mode: "fixed", dayOfMonth: 25 });
+    else update("payday", { mode: "lastWeekday" });
+  }
+
+  function setDayOfMonth(day: number) {
+    if (settings.payday?.mode === "fixed") update("payday", { mode: "fixed", dayOfMonth: day });
+  }
 
   return (
     <div className="settings-page">
@@ -27,6 +47,74 @@ export function Settings() {
         <h1>Settings</h1>
         <p>Make the app feel right for you. Changes save automatically.</p>
       </header>
+
+      <section className="card settings-page__section">
+        <h2>Payday</h2>
+        <p className="settings-page__hint">
+          When your salary or main income arrives — the Overview counts down to it instead of to the end of the
+          calendar month.
+        </p>
+        <div className="settings-page__options" role="radiogroup" aria-label="Payday pattern">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={mode === "none"}
+            className={"settings-page__option" + (mode === "none" ? " settings-page__option--active" : "")}
+            onClick={() => setMode("none")}
+          >
+            Not set
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={mode === "fixed"}
+            className={"settings-page__option" + (mode === "fixed" ? " settings-page__option--active" : "")}
+            onClick={() => setMode("fixed")}
+          >
+            Fixed day of month
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={mode === "lastWeekday"}
+            className={"settings-page__option" + (mode === "lastWeekday" ? " settings-page__option--active" : "")}
+            onClick={() => setMode("lastWeekday")}
+          >
+            Last working day
+          </button>
+        </div>
+
+        {settings.payday?.mode === "fixed" && (
+          <label className="settings-page__day-field">
+            <span>Day of the month</span>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              value={settings.payday.dayOfMonth}
+              onChange={(e) => setDayOfMonth(Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
+            />
+          </label>
+        )}
+
+        {settings.payday?.mode === "lastWeekday" && (
+          <p className="settings-page__hint">
+            The last Monday–Friday of each month. This doesn't know about public holidays, only weekends.
+          </p>
+        )}
+
+        {settings.payday &&
+          (() => {
+            const next = getNextPayday(settings.payday);
+            const days = daysUntil(next);
+            return (
+              <p className="settings-page__payday-preview">
+                Next payday: <strong>{next.toLocaleDateString(undefined, { day: "numeric", month: "long" })}</strong>{" "}
+                — {days === 0 ? "today" : days === 1 ? "in 1 day" : `in ${days} days`}
+              </p>
+            );
+          })()}
+      </section>
 
       <section className="card settings-page__section">
         <h2>Theme</h2>

@@ -51,3 +51,8 @@ export interface Debt {
   /** Optional — what you pay toward it each month, just for reference. */
   monthlyPayment?: number;
 }
+
+/** When your salary/main income actually arrives — so the Overview can
+ * count down to it instead of to the calendar month-end. `null` means
+ * not configured yet, and everything falls back to calendar months. */
+export type PaydaySettings = { mode: "fixed"; dayOfMonth: number } | { mode: "lastWeekday" };

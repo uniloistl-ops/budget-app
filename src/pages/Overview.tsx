@@ -5,12 +5,14 @@ import { MonthNav } from "../components/MonthNav";
 import { TransactionRow } from "../components/TransactionRow";
 import { mockUpcoming } from "../data/mockData";
 import { useBudgetData } from "../context/BudgetDataContext";
-import { daysLeftInMonth, formatMonthLabel } from "../lib/dates";
+import { useSettings } from "../context/SettingsContext";
+import { daysLeftInMonth, daysUntil, formatMonthLabel, getNextPayday } from "../lib/dates";
 import "./Overview.css";
 
 export function Overview() {
   const { categories, categoriesWithSpent, transactionsForSelectedMonth, selectedMonth, isCurrentMonth, incomeForSelectedMonth, debts } =
     useBudgetData();
+  const { settings } = useSettings();
   const totalSpent = categoriesWithSpent.reduce((sum, c) => sum + c.spent, 0);
   const totalLimit = categoriesWithSpent.reduce((sum, c) => sum + c.limit, 0);
   const fixedCategories = categoriesWithSpent.filter((c) => c.type === "fixed");
@@ -21,28 +23,39 @@ export function Overview() {
   // want. Before that, fall back to the category-limits total.
   const hasIncome = incomeForSelectedMonth !== undefined;
   const totalLeft = hasIncome ? incomeForSelectedMonth - totalSpent : totalLimit - totalSpent;
-  const days = daysLeftInMonth();
+
+  // When a payday is configured, the budgeting cycle runs payday-to-payday
+  // rather than calendar-month-to-month — so "days remaining" counts down
+  // to it instead of to month-end (only meaningful while viewing the
+  // current month; browsing a past/future month keeps the calendar framing).
+  const nextPayday = settings.payday ? getNextPayday(settings.payday) : null;
+  const daysUntilPayday = nextPayday ? daysUntil(nextPayday) : null;
+  const usingPayday = isCurrentMonth && daysUntilPayday !== null;
+  const days = usingPayday ? daysUntilPayday : daysLeftInMonth();
+  const dailyAllowance = usingPayday && days > 0 && totalLeft > 0 ? totalLeft / days : null;
+
   const recentTransactions = [...transactionsForSelectedMonth].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 4);
   const monthLabel = formatMonthLabel(selectedMonth);
 
   function renderSentence() {
     const amount = <strong>€{Math.abs(totalLeft).toFixed(0)}</strong>;
     if (isCurrentMonth) {
+      const dayPhrase = usingPayday ? "until payday" : "this month";
       return totalLeft >= 0 ? (
         <>
           You have {amount} left to spend for{" "}
           <strong>
             {days} more day{days === 1 ? "" : "s"}
           </strong>{" "}
-          this month.
+          {dayPhrase}.
         </>
       ) : (
         <>
-          You've gone {amount} over this month's budget, with{" "}
+          You've gone {amount} over budget, with{" "}
           <strong>
             {days} day{days === 1 ? "" : "s"}
           </strong>{" "}
-          left. That's okay — see what's driving it below.
+          left {dayPhrase}. That's okay — see what's driving it below.
         </>
       );
     }
@@ -69,6 +82,11 @@ export function Overview() {
           <h1>Overview</h1>
           <MonthNav />
           <p className="overview__sentence">{renderSentence()}</p>
+          {dailyAllowance !== null && (
+            <p className="overview__daily-line">
+              That's about <strong>€{dailyAllowance.toFixed(0)}</strong> a day until payday.
+            </p>
+          )}
           {hasIncome && (
             <p className="overview__income-line">
               Income for {monthLabel}: <strong>€{incomeForSelectedMonth.toFixed(0)}</strong>
@@ -87,6 +105,11 @@ export function Overview() {
       </header>
 
       <section className="card overview__chart-card">
+        {usingPayday && (
+          <div className="overview__payday-badge">
+            {daysUntilPayday === 0 ? "Payday today" : `Payday in ${daysUntilPayday} day${daysUntilPayday === 1 ? "" : "s"}`}
+          </div>
+        )}
         <BudgetPieChart categories={categoriesWithSpent} centerLabel="spent so far" centerValue={`€${totalSpent.toFixed(0)}`} />
       </section>
 

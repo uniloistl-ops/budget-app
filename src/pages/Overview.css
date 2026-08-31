@@ -67,6 +67,28 @@
 
 .overview__chart-card {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.overview__payday-badge {
+  align-self: flex-start;
+  background: var(--status-good-bg);
+  color: var(--status-good);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 4px var(--space-3);
+  border-radius: 999px;
+}
+
+.overview__daily-line {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.overview__daily-line strong {
+  color: var(--text-primary);
 }
 
 .overview__category-grid {
