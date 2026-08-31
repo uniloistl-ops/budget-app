@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { nextColorVar } from "../config/categories";
 import { usePersistentState } from "../lib/usePersistentState";
 import { currentMonthKey, shiftMonthKey } from "../lib/dates";
@@ -7,10 +7,6 @@ import type { Category, CategoryId, CategoryType, CategoryWithSpent, Debt, Folde
 /** The id "Apply" on the Paycheck tab writes to, so re-applying updates
  * the same entry instead of piling up duplicates. */
 const PAYCHECK_SOURCE_ID = "paycheck";
-
-/** Synthetic id for the catch-all folder shown on Transactions for any
- * category that hasn't been filed under a real folder — never stored. */
-export const OTHER_FOLDER_ID = "__other__";
 
 // A starter set of category names so the app isn't a blank wall on first
 // run — but no fake limits or history. Rename, delete, or add to these
@@ -42,6 +38,9 @@ interface BudgetData {
   /** Month key ("2026-08") -> that month's income sources (paycheck, side
    * gigs, gifts, refunds, ...) — the month's total is their sum. */
   incomeSourcesByMonth: Record<string, IncomeSource[]>;
+  /** Set once the one-time "folders are optional now" reset (below) has
+   * run, so it never re-fires and re-clears folders someone creates later. */
+  foldersResetV1?: boolean;
 }
 
 function makeId(): string {
@@ -96,12 +95,11 @@ interface BudgetDataContextValue {
   updateDebt: (id: string, patch: Partial<Pick<Debt, "label" | "totalAmount" | "remainingAmount" | "monthlyPayment">>) => void;
   addDebt: (input: Omit<Debt, "id">) => void;
   deleteDebt: (id: string) => void;
-  /** Creates a folder and returns its id, so a caller (e.g. the "+ New
-   * folder…" quick-create in CategoryCard) can select it immediately. */
+  /** Creates a folder and returns its id. */
   addFolder: (input: { label: string }) => string;
   updateFolder: (id: string, patch: Partial<Pick<Folder, "label">>) => void;
-  /** Deletes the folder; categories inside it fall back to unfiled
-   * ("Other") — their transactions and the categories themselves are untouched. */
+  /** Deletes the folder; categories inside it become unfiled (no folder) —
+   * their transactions and the categories themselves are untouched. */
   deleteFolder: (id: string) => void;
 }
 
@@ -148,6 +146,23 @@ export function BudgetDataProvider({ children }: { children: ReactNode }) {
       }),
     [data.categories]
   );
+
+  // One-time reset: folders used to gate the entire Transactions page (open
+  // a folder to see anything inside it), which turned out confusing —
+  // categories are now always visible, and folders are purely an optional
+  // extra. Any folders/assignments made under the old model no longer
+  // apply, so this clears them once per browser. Categories and
+  // transactions themselves are never touched.
+  useEffect(() => {
+    if (data.foldersResetV1) return;
+    setData({
+      ...data,
+      folders: [],
+      categories: data.categories.map((c) => (c.folderId ? { ...c, folderId: null } : c)),
+      foldersResetV1: true,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.foldersResetV1]);
 
   const transactionsForSelectedMonth = useMemo(
     () => data.transactions.filter((t) => t.date.startsWith(selectedMonth)),

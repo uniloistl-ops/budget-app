@@ -70,13 +70,21 @@ export function nextColorVar(existingCategoryCount: number): string {
   return COLOR_VAR_POOL[existingCategoryCount % COLOR_VAR_POOL.length];
 }
 
+/** Whether a limit represents a real, user-set budget cap — as opposed to
+ * the unset default of 0. Every place that compares spent-vs-limit must
+ * use this same check, so "no limit yet" is never mistaken for "already
+ * over budget" in one spot and correctly ignored in another. */
+export function hasLimit(limit: number): boolean {
+  return limit > 0;
+}
+
 /**
  * Traffic-light status from how close spending is to the limit.
  * Kept as one function so the green -> yellow -> red thresholds are
  * defined exactly once.
  */
 export function getBudgetStatus(spent: number, limit: number): BudgetStatus {
-  if (limit <= 0) return "good";
+  if (!hasLimit(limit)) return "good";
   const ratio = spent / limit;
   if (ratio < 0.7) return "good";
   if (ratio < 0.9) return "warning";

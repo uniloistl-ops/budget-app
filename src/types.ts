@@ -15,14 +15,16 @@ export interface Category {
   /** "fixed" = same amount every month (rent, insurance, subscriptions);
    * "variable" = changes month to month (groceries, fun money). */
   type: CategoryType;
-  /** Which folder this category is filed under on the Transactions page.
-   * `null`/absent means it shows up in the catch-all "Other" folder. */
+  /** Which optional folder this category is filed under on the
+   * Transactions page. `null`/absent means it's not in any folder — it
+   * still shows up normally, just with no folder badge. */
   folderId?: string | null;
 }
 
-/** A named group of categories — e.g. "Household", "Debt" — used purely to
- * organize the Transactions page (click a folder, see what's inside)
- * instead of showing every category flat all at once. */
+/** A named group of categories — e.g. "Household", "Debt" — an optional
+ * extra way to organize the Transactions page. Every category is always
+ * shown directly; a folder just adds a badge and an optional filter on
+ * top, it never hides anything. */
 export interface Folder {
   id: string;
   label: string;

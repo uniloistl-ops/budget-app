@@ -66,14 +66,21 @@ function CategorySection({
   type: CategoryType;
   categories: CategoryWithSpent[];
 }) {
-  const { transactions, folders, addFolder, updateCategory, deleteCategory } = useBudgetData();
+  const { transactions, updateCategory, deleteCategory } = useBudgetData();
   const [showAddForm, setShowAddForm] = useState(false);
 
   return (
     <section className="categories-page__section">
       <div className="categories-page__section-header">
         <div>
-          <h2>{title}</h2>
+          <h2>
+            <span
+              className="section-group-dot"
+              style={{ background: `var(--group-${type})` }}
+              aria-hidden="true"
+            />
+            {title}
+          </h2>
           <p className="categories-page__hint">{hint}</p>
         </div>
         {!showAddForm && (
@@ -92,11 +99,8 @@ function CategorySection({
               key={c.id}
               category={c}
               onEdit={(patch) => updateCategory(c.id, patch)}
-              onChangeType={(type) => updateCategory(c.id, { type })}
               onDelete={() => deleteCategory(c.id)}
               transactionCount={transactions.filter((t) => t.categoryId === c.id).length}
-              folders={folders}
-              onCreateFolder={(label) => addFolder({ label })}
             />
           ))}
         </div>

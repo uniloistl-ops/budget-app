@@ -111,7 +111,43 @@
 
 .transactions__folder-toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.transactions__folder-filter {
+  display: flex;
+  gap: 4px;
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-control);
+  padding: 3px;
+  flex-wrap: wrap;
+}
+
+.transactions__folder-filter-btn {
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius-control) - 3px);
+  padding: 5px var(--space-3);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast) var(--transition-fn), color var(--transition-fast) var(--transition-fn);
+}
+
+.transactions__folder-filter-btn--active {
+  background: var(--color-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.transactions__folder-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-left: auto;
 }
 
 .transactions__add-folder-link {
@@ -124,67 +160,104 @@
   padding: 4px;
 }
 
-.transactions__folder-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-3);
-}
-
-.transactions__folder-tile {
+.transactions__folder-manage {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  text-align: left;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: var(--space-3) var(--space-4);
-  cursor: pointer;
-  transition: border-color var(--transition-fast) var(--transition-fn);
 }
 
-.transactions__folder-tile:hover,
-.transactions__folder-tile:focus-visible {
-  border-color: var(--accent);
-}
-
-.transactions__folder-tile-icon-row {
+.transactions__folder-row {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.transactions__folder-manage .transactions__folder-row:last-child {
+  border-bottom: none;
+}
+
+.transactions__folder-row-label {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.transactions__folder-row--editing {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.transactions__folder-row-text {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+}
+
+.transactions__folder-row-text:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.transactions__folder-row-actions {
+  display: flex;
   gap: var(--space-2);
 }
 
-.transactions__folder-tile-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  color: var(--text-secondary);
-}
-
-.transactions__folder-tile-icon-row h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.transactions__folder-tile-amount {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.transactions__back-link {
-  align-self: flex-start;
-  background: none;
+.transactions__folder-row-save,
+.transactions__folder-row-cancel {
   border: none;
-  color: var(--accent);
-  font-weight: 600;
-  font-size: 0.9rem;
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-3);
+  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
-  padding: 4px 0;
 }
 
-.transactions__folder-heading {
-  margin: -8px 0 0 0;
+.transactions__folder-row-save {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.transactions__folder-row-cancel {
+  background: var(--color-surface-sunken);
+  color: var(--text-secondary);
+}
+
+.transactions__folder-row-confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.transactions__folder-row-confirm-yes,
+.transactions__folder-row-confirm-no {
+  border: none;
+  border-radius: var(--radius-control);
+  padding: 4px var(--space-2);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.transactions__folder-row-confirm-yes {
+  background: var(--status-critical);
+  color: #fff;
+}
+
+.transactions__folder-row-confirm-no {
+  background: var(--color-surface-sunken);
+  color: var(--text-secondary);
 }
 
 .transactions__groups {
@@ -193,16 +266,42 @@
   gap: var(--space-3);
 }
 
+.transactions__group-header-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .transactions__group-header {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   text-align: left;
+}
+
+.transactions__folder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-surface-sunken);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.transactions__folder-badge-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
 .transactions__group-header h3 {

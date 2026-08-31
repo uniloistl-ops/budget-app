@@ -7,6 +7,7 @@ import { IconTrendingDown, IconTrendingUp } from "../components/icons";
 import { MonthNav } from "../components/MonthNav";
 import { TransactionRow } from "../components/TransactionRow";
 import { mockUpcoming } from "../data/mockData";
+import { hasLimit } from "../config/categories";
 import { useBudgetData } from "../context/BudgetDataContext";
 import { useSettings } from "../context/SettingsContext";
 import { daysLeftInMonth, daysUntil, formatMonthLabel, getNextPayday } from "../lib/dates";
@@ -159,7 +160,9 @@ export function Overview() {
   const [chartView, setChartView] = useState<ChartView>("category");
   const [showAddIncomeForm, setShowAddIncomeForm] = useState(false);
   const totalSpent = categoriesWithSpent.reduce((sum, c) => sum + c.spent, 0);
-  const totalLimit = categoriesWithSpent.reduce((sum, c) => sum + c.limit, 0);
+  const categoriesWithRealLimit = categoriesWithSpent.filter((c) => hasLimit(c.limit));
+  const totalLimit = categoriesWithRealLimit.reduce((sum, c) => sum + c.limit, 0);
+  const anyLimitsSet = categoriesWithRealLimit.length > 0;
   const fixedCategories = categoriesWithSpent.filter((c) => c.type === "fixed");
   const variableCategories = categoriesWithSpent.filter((c) => c.type === "variable");
   const totalDebt = debts.reduce((sum, d) => sum + d.remainingAmount, 0);
@@ -183,9 +186,13 @@ export function Overview() {
         ];
   // Once income has been added for this month (paycheck and/or other
   // sources), "money left" is income minus spending — the number people
-  // actually want. Before that, fall back to the category-limits total.
+  // actually want. Before that, fall back to the category-limits total —
+  // but only counting categories with a real (non-zero) limit set, so
+  // spending never reads as "over budget" against limits nobody set yet.
+  // If neither income nor any real limit exists, there's nothing legitimate
+  // to compare against, so totalLeft stays null (handled in renderSentence).
   const hasIncome = incomeForSelectedMonth !== undefined;
-  const totalLeft = hasIncome ? incomeForSelectedMonth - totalSpent : totalLimit - totalSpent;
+  const totalLeft = hasIncome ? incomeForSelectedMonth - totalSpent : anyLimitsSet ? totalLimit - totalSpent : null;
   const spendingLessThanEarning = hasIncome ? totalSpent <= incomeForSelectedMonth : null;
 
   // When a payday is configured, the budgeting cycle runs payday-to-payday
@@ -196,12 +203,21 @@ export function Overview() {
   const daysUntilPayday = nextPayday ? daysUntil(nextPayday) : null;
   const usingPayday = isCurrentMonth && daysUntilPayday !== null;
   const days = usingPayday ? daysUntilPayday : daysLeftInMonth();
-  const dailyAllowance = isCurrentMonth && days > 0 && totalLeft > 0 ? totalLeft / days : null;
+  const dailyAllowance = isCurrentMonth && days > 0 && totalLeft !== null && totalLeft > 0 ? totalLeft / days : null;
 
   const recentTransactions = [...transactionsForSelectedMonth].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 4);
   const monthLabel = formatMonthLabel(selectedMonth);
 
   function renderSentence() {
+    if (totalLeft === null) {
+      return (
+        <>
+          You've spent <strong>€{totalSpent.toFixed(0)}</strong>{" "}
+          {isCurrentMonth ? "so far this month" : `in ${monthLabel}`}. Add your income or a category limit to see
+          what's left.
+        </>
+      );
+    }
     const amount = <strong>€{Math.abs(totalLeft).toFixed(0)}</strong>;
     if (isCurrentMonth) {
       const dayPhrase = usingPayday ? "until payday" : "this month";
@@ -352,7 +368,10 @@ export function Overview() {
 
       {fixedCategories.length > 0 && (
         <section>
-          <h2>Fixed costs</h2>
+          <h2>
+            <span className="section-group-dot" style={{ background: "var(--group-fixed)" }} aria-hidden="true" />
+            Fixed costs
+          </h2>
           <div className="overview__category-grid">
             {fixedCategories.map((c) => (
               <CategoryCard key={c.id} category={c} />
@@ -363,7 +382,10 @@ export function Overview() {
 
       {variableCategories.length > 0 && (
         <section>
-          <h2>Variable costs</h2>
+          <h2>
+            <span className="section-group-dot" style={{ background: "var(--group-variable)" }} aria-hidden="true" />
+            Variable costs
+          </h2>
           <div className="overview__category-grid">
             {variableCategories.map((c) => (
               <CategoryCard key={c.id} category={c} />

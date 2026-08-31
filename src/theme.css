@@ -179,3 +179,15 @@ a {
   box-shadow: var(--shadow-card);
 }
 
+/* One dot per Fixed/Variable section heading (Categories, Transactions) —
+   ties the two pages' shared grouping together with --group-fixed/
+   --group-variable, dual-coded alongside the existing text label. */
+.section-group-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: var(--space-2);
+  vertical-align: middle;
+}
+
